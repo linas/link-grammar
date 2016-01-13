@@ -9026,7 +9026,6 @@ RIGHT-WALL: RW- or ({@Xca-} & [[Xc-]]);
 % of linkages by 2^(number of "). So it is separated below.
 
 % [[ZZZ-]]: link to "random" quotion marks that show up "for no reason".
-% CP or [()]: "Let's go!" she said.
 % Cannot use a blanket W+ here to pick up all W connectors,
 % since 
 """: QUd- or <post-quote> or [[ZZZ-]];
@@ -9047,7 +9046,7 @@ RIGHT-WALL: RW- or ({@Xca-} & [[Xc-]]);
    or <sent-split>;
 
 % Almost any W+ link appears here, except Wa, which clearly is wrong after
-% a semicolon. -- looks a lot like <sent-start>.  We do need Wa for comma's
+% a semicolon. -- looks a lot like <sent-start>.  We do need Wa for commas
 <semicol>:
   {@Xca-} & Xx-
     & (((Wd+ or Ws+ or Wq+ or Wj+ or Wt+ or Wi+ or Wc+ or Qd+) & <WALL>)
