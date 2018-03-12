@@ -52,7 +52,7 @@ changecom(`%')
  %
  % Many nouns in words.n.4 are treated as "mass or count". The side
  % effect is that mass nouns are inconsistently treated as sometimes
- % singular, sometimes plural. e.g. words.n.3 gets <noun-sub-s> &
+ % singular, sometimes plural. e.g. words.n.3 gets <noun-rel-s> &
  % <noun-main-m>. This is a kind-of ugly tangle, it should really
  % be sorted out so that links are properly marked as s, p or m.
  % This is mostly fixed, except that some uses of <noun-main-m>
@@ -124,7 +124,7 @@ nonCAP.zzz: ZZZ-;
   or <costly-null>;
 
 % noun-main-s -- singular
-% XXX FIXME: <noun-main-?> is often used with <noun-sub-?> and sub
+% XXX FIXME: <noun-main-?> is often used with <noun-rel-?> and sub
 % has a R+ & B+ on it. The problem here is that R+ & B+ should not
 % be used with either the J- or the O-.  This needs to be refactored
 % to prevent this.
@@ -211,10 +211,11 @@ nonCAP.zzz: ZZZ-;
   or <post-nominal-s>
   or <costly-null>;
 
+% Optional relative clauses; post-nominal modifiers
 % @M+: "The disability of John means he is slow"
-<noun-sub-x>: {@M+} & {R+ & B+ & {[[@M+]]}} & {@MX+};
-<noun-sub-s>: {@M+} & {R+ & Bs+ & {[[@M+]]}} & {@MXs+};
-<noun-sub-p>: {@M+} & {R+ & Bp+ & {[[@M+]]}} & {@MXp+};
+<noun-rel-x>: {@M+} & {R+ & B+ & {[[@M+]]}} & {@MX+};
+<noun-rel-s>: {@M+} & {R+ & Bs+ & {[[@M+]]}} & {@MXs+};
+<noun-rel-p>: {@M+} & {R+ & Bp+ & {[[@M+]]}} & {@MXp+};
 
 % [@AN-].1: add a tiny cost so that A- is preferred to AN- when there
 % is a choice. The is because some nouns are also listed as adjectives,
@@ -321,7 +322,7 @@ nonCAP.zzz: ZZZ-;
 % verb in the sentence "Sue went to the store.")
 %
 % To help discourage capitalized use when the lower-case is in the dict,
-% we give a slight cost to [<noun-sub-s> & (JG- or <noun-main-s>)] to
+% we give a slight cost to [<noun-rel-s> & (JG- or <noun-main-s>)] to
 % discourage use as a common noun, so that the lower-case version can
 % play this role.  Likewise th cost on [AN+].
 %
@@ -333,7 +334,7 @@ nonCAP.zzz: ZZZ-;
 INITIALS ALL-UPPER <entity-singular>:
   ({NM+} & ({G-} & {[MG+]} &
     (({DG- or [[GN-]] or [[@A- & @AN-]] or [[{@A-} & {D-}]] or ({@A-} & Jd- & Dmc-)} &
-        ((<noun-sub-s> & (JG- or <noun-main-s>))
+        ((<noun-rel-s> & (JG- or <noun-main-s>))
         or <noun-and-s>
         or YS+
         ))
@@ -356,7 +357,7 @@ CAPITALIZED-WORDS: [<entity-singular>]0.06;
 PL-CAPITALIZED-WORDS:
   ({NM+} & {G-} & {[MG+]} &
     (({DG- or [[GN-]] or [[{@A-} & ({Dmc-} or {Ds-})]] or ({@A-} & Jd- & Dmc-) } &
-        ([<noun-sub-x> & (JG- or <noun-main-x>)]
+        ([<noun-rel-x> & (JG- or <noun-main-x>)]
         or <noun-and-x>
         or YS+
         or YP+
@@ -438,7 +439,7 @@ An.f In.f So.f: [[<given-names>]];
 <noun-mass-count>:
   <noun-modifiers> &
     (({NM+} & AN+)
-    or ({NM+ or ({Jd-} & D*u-)} & <noun-sub-s> & (<noun-main-m> or <rel-clause-s>))
+    or ({NM+ or ({Jd-} & D*u-)} & <noun-rel-s> & (<noun-main-m> or <rel-clause-s>))
     or ({NM+ or ({Jd-} & D*u-)} & <noun-and-p,u>)
     or (YS+ & {D*u-})
     or (GN+ & (DD- or [()]))
@@ -460,7 +461,7 @@ GREEK-LETTER-AND-NUMBER pH.i x.n: <noun-mass-count>;
   <noun-modifiers> &
     ([[AN+]]
     or ({NM+ or ({{Dmc-} & Jd-} & Dmc-)} &
-      <noun-sub-p> & (<noun-main-p> or <rel-clause-p>))
+      <noun-rel-p> & (<noun-main-p> or <rel-clause-p>))
     or ({NM+ or Dmc-} & <noun-and-p>)
     or SJrp-
     or (YP+ & {Dmc-})
@@ -550,7 +551,7 @@ ALL-UPPER.n
 HYPHENATED-WORDS.n:
   [[({@AN-} & {@A-} &
     (({NM+ or D-} &
-      ((<noun-sub-x> & (<noun-main-x> or <rel-clause-x>))
+      ((<noun-rel-x> & (<noun-main-x> or <rel-clause-x>))
       or <noun-and-x>))
      or U-
      or ({D-} & Wa-)))
@@ -582,7 +583,7 @@ HYPHENATED-WORDS.n:
   <noun-modifiers> &
     (({NMa+} & AN+)
     or ((NM+ or ({[NM+]1.5} & (Ds- or <no-det-null>)))
-      & ((<noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+      & ((<noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
         or <noun-and-s>))
     or SJrs-
     or (YS+ & Ds-)
@@ -602,7 +603,7 @@ HYPHENATED-WORDS.n:
   or (<nn-modifiers> &
     (({NMa+} & AN+)
     or ((NM+ or ({[NM+]1.5} & (Ds**x- or <no-det-null>)))
-      & ((<noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+      & ((<noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
         or <noun-and-s>))
     or (YS+ & Ds**x-)
     ));
@@ -611,7 +612,7 @@ HYPHENATED-WORDS.n:
   <common-phonetic>
   or (({NMa+} & AN+)
     or ((NM+ or ({[NM+]1.5} & (Ds**v- or <no-det-null>)))
-      & ((<noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+      & ((<noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
         or <noun-and-s>))
     or (YS+ & Ds**v-));
 
@@ -619,7 +620,7 @@ HYPHENATED-WORDS.n:
   <common-phonetic>
   or (({NMa+} & AN+)
     or ((NM+ or ({[NM+]1.5} & (Ds**c- or <no-det-null>)))
-      & ((<noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+      & ((<noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
         or <noun-and-s>))
     or (YS+ & Ds**c-));
 
@@ -654,7 +655,7 @@ PL-GREEK-LETTER-AND-NUMBER: <generic-plural-id>;
     or Up-
     or ({Dmc-} & Wa-)
     or ({NM+ or ({Jd-} & Dmc-)} &
-      ((<noun-sub-p> & (<noun-main-p> or <rel-clause-p>)) or <noun-and-s>))
+      ((<noun-rel-p> & (<noun-main-p> or <rel-clause-p>)) or <noun-and-s>))
     or (YS+ & {Dmc-})
     ));
 
@@ -672,7 +673,7 @@ PL-GREEK-LETTER-AND-NUMBER: <generic-plural-id>;
     or Up-
     or ({Dmu-} & Wa-)
     or ({NM+ or ({{Dmu-} & Jd-} & Dmu-)}
-      & ((<noun-sub-s> & (<noun-main-u> or <rel-clause-s>)) or <noun-and-p,u>))
+      & ((<noun-rel-s> & (<noun-main-u> or <rel-clause-s>)) or <noun-and-p,u>))
     or (YS+ & {Dmu-})
     );
 
@@ -686,7 +687,7 @@ PL-GREEK-LETTER-AND-NUMBER: <generic-plural-id>;
     or Up-
     or ({Dm-} & [Wa-]0.02)
     or ({NM+ or ({{Dmu-} & Jd-} & Dmu-)}
-      & ((<noun-sub-s> & (<noun-main-u> or <rel-clause-s>)) or <noun-and-p,u>))
+      & ((<noun-rel-s> & (<noun-main-u> or <rel-clause-s>)) or <noun-and-p,u>))
     or (YS+ & {Dmu-})
     );
 
@@ -738,7 +739,7 @@ tawny.n ultramarine.n umber.n yellow.n:
     (GN+ & (DD- or [()]))
     or Up-
     or ({Dmu-} & Wa-)
-    or ({Dmu-} & <noun-sub-s> & ([<noun-main-m> or <rel-clause-s>]))
+    or ({Dmu-} & <noun-rel-s> & ([<noun-main-m> or <rel-clause-s>]))
     or (YS+ & {Dmu-})
     ));
 
@@ -777,7 +778,7 @@ granduncle.m grandaunt.f:
 alter_ego au_pair mise_en_scene faux_pas non_sequitur fait_accompli
 modus_vivendi head_of_state tour_de_force:
   (<noun-modifiers> &
-    ((Ds- & <noun-sub-s> & (<noun-main-s> or <rel-clause-s>)) or
+    ((Ds- & <noun-rel-s> & (<noun-main-s> or <rel-clause-s>)) or
     ({Ds-} & <noun-and-s>) or
     Us- or
     (YS+ & Ds-) or
@@ -790,7 +791,7 @@ a_must time_of_day time_of_year top_dollar year_end
 breach_of_contract sleight_of_hand power_of_attorney word_of_mouth
 carte_blanche:
   (<noun-modifiers> &
-    (({Dmu-} & <noun-sub-s> & (<noun-main-m> or <rel-clause-s>)) or
+    (({Dmu-} & <noun-rel-s> & (<noun-main-m> or <rel-clause-s>)) or
     ({Dmu-} & <noun-and-u>) or
     Um- or
     (YS+ & {Dmu-}) or
@@ -808,15 +809,15 @@ carte_blanche:
     & (BIt- or (Xd- & (Xc+ or <costly-null>) & MX-) or Ou- or TI-);
 
 % Almost identical to below.
-% Ds- & {NM+} & <noun-sub-x> &.. "the number 12 is a lucky number"
+% Ds- & {NM+} & <noun-rel-x> &.. "the number 12 is a lucky number"
 % above has cost to give "a number of" priority.
 number.n:
   (<nn-modifiers> & (
-    [Ds**x- & {NM+} & <noun-sub-x> & (<noun-main-x> or B*x+)]
+    [Ds**x- & {NM+} & <noun-rel-x> & (<noun-main-x> or B*x+)]
     or ({Ds**x-} & {NM+} & <noun-and-x>)
   ))
   or (
-    [Ds**c- & {NM+} & <noun-sub-x> & (<noun-main-x> or B*x+)]
+    [Ds**c- & {NM+} & <noun-rel-x> & (<noun-main-x> or B*x+)]
     or ({Ds**c-} & {NM+} & <noun-and-x>)
   )
   or AN+;
@@ -825,11 +826,11 @@ number.n:
 % Differing in strange ways from <common-noun>
 majority.n minority.n bunch.n batch.n bulk.n handful.n group.n:
   (<nn-modifiers> & (
-    [Ds**x- & <noun-sub-x> & (<noun-main-x> or B*x+)]
+    [Ds**x- & <noun-rel-x> & (<noun-main-x> or B*x+)]
     or ({Ds**x-} & <noun-and-x>)
   ))
   or (
-    [Ds**c- & <noun-sub-x> & (<noun-main-x> or B*x+)]
+    [Ds**c- & <noun-rel-x> & (<noun-main-x> or B*x+)]
     or ({Ds**c-} & <noun-and-x>)
   )
   or AN+;
@@ -839,7 +840,7 @@ majority.n minority.n bunch.n batch.n bulk.n handful.n group.n:
   <noun-modifiers> &
     (AN+
     or ((NM+ or [[{[NM+]1.5} & (Ds- or <no-det-null>) ]] )
-      & ((<noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+      & ((<noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
         or <noun-and-s>))
     or SJrs-
     or (YS+ & Ds-)
@@ -872,11 +873,11 @@ majority.n minority.n bunch.n batch.n bulk.n handful.n group.n:
 
 <kind-of>:
   ({@AN-} & @A- & U+ &
-    ((Ds**x- & <noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+    ((Ds**x- & <noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
     or ({Ds**x-} & <noun-and-s>)
     or Us-))
   or (U+ &
-    ((Ds**c- & <noun-sub-s> & (<noun-main-s> or <rel-clause-s>))
+    ((Ds**c- & <noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
     or ({Ds**c-} & <noun-and-s>)
     or Us-));
 
@@ -896,14 +897,14 @@ type_of sort_of breed_of species_of:
 % This gets a cost, so that the {Jd-} link for measures.2 is prefered.
 kinds_of types_of sorts_of breeds_of species_of:
   [{{@AN-} & @A-} & U+ &
-    (({Dmc-} & <noun-sub-p> & (<noun-main-p> or <rel-clause-p>))
+    (({Dmc-} & <noun-rel-p> & (<noun-main-p> or <rel-clause-p>))
     or ({Dmc-} & <noun-and-p>)
     or Up-)];
 
 % A+: "It has twice the percent value"
 percent.u parts.u:
   (<noun-modifiers> &
-    ((ND- & {DD-} & <noun-sub-x> & (<noun-main-x> or B*x+)) or
+    ((ND- & {DD-} & <noun-rel-x> & (<noun-main-x> or B*x+)) or
     <noun-main-p> or
     (ND- & {DD-} & <noun-and-x>) or
     U-))
@@ -1095,9 +1096,9 @@ vote.n bill.n:
     ({NM+} & Ss+ & Wd-))) or
   AN+;
 
-% <noun-sub-uto>: somewhat like <noun-sub-s> but with more stuff.
+% <noun-rel-uto>: somewhat like <noun-rel-s> but with more stuff.
 % {Jd-}: "a large amount of effort"
-<noun-sub-uto>:
+<noun-rel-uto>:
   {{Jd-} & D*u-} & {@M+} & {(<ton-verb> or (R+ & Bs+)) & {[[@M+]]}} & {@MXs+};
 
 % Like other generic noun types, but can take "to"
@@ -1105,7 +1106,7 @@ vote.n bill.n:
 <noun-to>:
   <noun-modifiers> &
     (AN+
-    or ((<noun-sub-uto> & (<noun-main-m> or <rel-clause-s>)) or <noun-and-p,u>)
+    or ((<noun-rel-uto> & (<noun-main-m> or <rel-clause-s>)) or <noun-and-p,u>)
     or ({D*u-} & <noun-and-u>)
     or (YS+ & {D*u-})
     or (GN+ & (DD- or [()]))
@@ -1340,7 +1341,7 @@ her:
   or Wa-;
 
 others:
-  {{Jd-} & Dmc-} & ((<noun-sub-p> & <noun-main-p>) or <noun-and-p>);
+  {{Jd-} & Dmc-} & ((<noun-rel-p> & <noun-main-p>) or <noun-and-p>);
 
 mine.p yours theirs.p hers ours:
   <noun-main-x>
@@ -1435,14 +1436,14 @@ them_all us_all you_all: Ox- or J-;
 it_all: [[Ox-]] or J-;
 
 something someone somebody:
-  {EL+} & (({Pa+} & <noun-sub-s> & {@MXs+} & <noun-main-s>) or <noun-and-s> or YS+ or Wa-);
+  {EL+} & (({Pa+} & <noun-rel-s> & {@MXs+} & <noun-main-s>) or <noun-and-s> or YS+ or Wa-);
 
 nothing no_one nobody:
-  {EN-} & {EL+} & (({Pa+} & <noun-sub-s> & {@MXs+} & <noun-main-s>) or <noun-and-s> or YS+ or Wa-);
+  {EN-} & {EL+} & (({Pa+} & <noun-rel-s> & {@MXs+} & <noun-main-s>) or <noun-and-s> or YS+ or Wa-);
 
 everything everyone anyone everybody anybody anything:
   {EN-} & {EL+}
-    & (((({Pa+} & <noun-sub-s>) or CX+) & {@MXs+} & <noun-main-s>) or <noun-and-s> or YS+ or Wa-);
+    & (((({Pa+} & <noun-rel-s>) or CX+) & {@MXs+} & <noun-main-s>) or <noun-and-s> or YS+ or Wa-);
 
 % EL-: "what the fuck happened?" "what else happened?"
 % Amazing how profanity works this way...
@@ -1513,7 +1514,7 @@ those:
   ({AL-} & (Dmc+ or DD+))
   or (Jd- & Dmu- & Op-)
   or (Jd- & Dmu- & {Wd-} & Sp+)
-  or (<noun-sub-p> & ([[<noun-main-p>]] or RJlr+ or RJrr-))
+  or (<noun-rel-p> & ([[<noun-main-p>]] or RJlr+ or RJrr-))
   or <noun-and-p>
   or Wa-;
 
@@ -1547,7 +1548,7 @@ many:
   or ({EE-} & (ND+ or NIn+))
   or ({DD-} & {EAx-} & Dmc+)
   or (OFd+ & Dmc+)
-  or ((({EAx-} & {DD-}) or H-) & <noun-sub-p> & ([<noun-main-p>] or <rel-clause-p>));
+  or ((({EAx-} & {DD-}) or H-) & <noun-rel-p> & ([<noun-main-p>] or <rel-clause-p>));
 
 % A naked <noun-main2-x> costs more than one with other links,
 % so that ditransitive verbs don't get spurious links to all.a
@@ -1573,10 +1574,10 @@ all.a:
     or <noun-and-x>))
   or DTa+;
 
-all_that: EA+ or EE+ or (<noun-sub-s> & <noun-main-s>);
-all_this: (<noun-sub-s> & <noun-main-s>) or <noun-and-s>;
+all_that: EA+ or EE+ or (<noun-rel-s> & <noun-main-s>);
+all_this: (<noun-rel-s> & <noun-main-s>) or <noun-and-s>;
 
-all_those all_these: [[<noun-sub-p> & <noun-main-p>]] or <noun-and-p>;
+all_those all_these: [[<noun-rel-p> & <noun-main-p>]] or <noun-and-p>;
 
 % ({Ds-} & Wa-): "That one."
 one:
@@ -1586,7 +1587,7 @@ one:
   ({EN-} & NIfn+) or
   ({NA-} & {EN-} & (({DD-} & Ds+) or ({{@A- & {[[@AN-]]}} & Ds-} &
     (YS+ or
-    (<noun-sub-s> & (<noun-main-s> or <rel-clause-s>)) or
+    (<noun-rel-s> & (<noun-main-s> or <rel-clause-s>)) or
     <noun-and-s>))))
   or NIm+
   or NSn+
@@ -1598,14 +1599,14 @@ one:
 ones:
   {@A- & {[[@AN-]]}} & {Dmc-} &
     (YP+ or
-    (<noun-sub-p> & <noun-main-p>) or
+    (<noun-rel-p> & <noun-main-p>) or
     <noun-and-p>);
 
 any:
   ({EN-} &
     (D+ or
     DD+ or
-    (<noun-sub-x> & <noun-main-x>) or
+    (<noun-rel-x> & <noun-main-x>) or
     <noun-and-x>)) or
   EC+;
 
@@ -1645,17 +1646,17 @@ such_an: Ds*kv+ or (<PHv> & Ds*kx+);
 
 a_lot:
   [[<noun-and-p>]]
-%  or [[(<noun-sub-p> & <noun-main-p>)]]
+%  or [[(<noun-rel-p> & <noun-main-p>)]]
   or EC+ or MVa- or <adv-of> or Wa-;
 
 % OFd+ & Dmc+: "I ate a few of the cookies."
 few:
   (OFd+ & Dmc+ & {A-} & (D- or EA-))
   or ({EA- or EF+ or ({EA-} & DD-)} &
-     (Dmc+ or [<noun-sub-p> & <noun-main-p>] or <noun-and-p> or Wa-));
+     (Dmc+ or [<noun-rel-p> & <noun-main-p>] or <noun-and-p> or Wa-));
 
 a_couple:
-%  [[<noun-sub-p> & <noun-main-p>]] or
+%  [[<noun-rel-p> & <noun-main-p>]] or
   <noun-and-p> or Wa-;
 
 % Numeric modifier: "a couple of thousand dollars"
@@ -1673,7 +1674,7 @@ a_few:
     (Dmc+
     or ND+
     or NIn+
-    or [[<noun-sub-p> & <noun-main-p>]]));
+    or [[<noun-rel-p> & <noun-main-p>]]));
 
 % OFd+ & Dm+: "I ate some of the cookies"; cost to <nou>, <adv-of> so
 % that this comes first.
@@ -1683,7 +1684,7 @@ some:
   or (OFd+ & Dm+ & {EC-})
   or EN+
   or MF+
-  or [<noun-sub-x> & <noun-main-x>]
+  or [<noun-rel-x> & <noun-main-x>]
   or <noun-and-x>
   or [[<adv-of>]]
   or Wa-;
@@ -1693,7 +1694,7 @@ little.i:
   or (OFd+ & Dm+ & {A-} & D-)
   or ({EEx- or H-}
     & (Dmu+
-      or [<noun-sub-s> & (<noun-main-s> or <rel-clause-s>)]
+      or [<noun-rel-s> & (<noun-main-s> or <rel-clause-s>)]
       or <noun-and-s>))
   or (AM- & (Dmuy+ or MVy- or Oy- or Jy-))
   or [[{Ds-} & <adv-of>]];
@@ -1705,7 +1706,7 @@ most:
   or EA+
   or MF+
   or [EE+]
-  or [<noun-sub-x> & <noun-main-x>]
+  or [<noun-rel-x> & <noun-main-x>]
   or <noun-and-x>
   or [<adv-of>]
   or [{DD-} & MVa- & {Mp+}];
@@ -1713,7 +1714,7 @@ most:
 the_most:
   ({OFd+} & Dm+)
   or EE+
-  or [<noun-sub-x> & <noun-main-x>]
+  or [<noun-rel-x> & <noun-main-x>]
   or MVa-;
 
 % "a part.n" should cover most cases.  Perhaps [[OF+ & <noun-main-s>]] should be
@@ -1735,7 +1736,7 @@ least.e: {DD-} & MVa- & {Mp+};
 
 none:
   (OFd+ & Dm+)
-  or [<noun-sub-x> & <noun-main-x>]
+  or [<noun-rel-x> & <noun-main-x>]
   or <noun-and-x>
   or [[<adv-of>]]
   or Wa-;
@@ -1772,17 +1773,17 @@ another:
   (OFd+ & Dm+)
   or Ds+
   or NIc+
-  or [<noun-sub-s> & <noun-main-s>]
+  or [<noun-rel-s> & <noun-main-s>]
   or <noun-and-s>
   or YS+
   or Wa-;
 
-one_another: (<noun-sub-s> & <noun-main-s>) or <noun-and-s> or YS+;
+one_another: (<noun-rel-s> & <noun-main-s>) or <noun-and-s> or YS+;
 
 each:
   (OFd+ & Dm+)
   or Ds+
-  or [<noun-sub-s> & <noun-main-s>]
+  or [<noun-rel-s> & <noun-main-s>]
   or <noun-and-s>
   or DTn+
   or E+
@@ -1792,7 +1793,7 @@ each:
 no.misc-d: ({EN-} & D+) or EC+;
 
 a_little:
-  [<noun-sub-s> & <noun-main-s>]
+  [<noun-rel-s> & <noun-main-s>]
   or <noun-and-s>
   or EA+ or EC+ or EE+ or MVa- or Wa-;
 
@@ -1800,14 +1801,14 @@ a_great_deal:
   EC+
   or MVa-
   or (OFd+ & Dmu+)
-  or [<noun-sub-s> & <noun-main-s>]
+  or [<noun-rel-s> & <noun-main-s>]
   or <noun-and-s>
   or Wa-;
 
 many_more a_few_more a_couple_more plenty_more a_lot_more:
   Dmcc+
   or (OFd+ & Dm+)
-  or [<noun-sub-p> & <noun-main-p>]
+  or [<noun-rel-p> & <noun-main-p>]
   or <noun-and-p>
   or Wa-;
 
@@ -1815,32 +1816,32 @@ some_more:
   MVa-
   or Dm+
   or (OFd+ & Dmu+)
-  or [<noun-sub-x> & <noun-main-x>]
+  or [<noun-rel-x> & <noun-main-x>]
   or <noun-and-x>
   or Wa-;
 
 one_more:
-  Ds+ or (<noun-sub-s> & <noun-main-s>) or <noun-and-s> or Wa-;
+  Ds+ or (<noun-rel-s> & <noun-main-s>) or <noun-and-s> or Wa-;
 
 not_many:
   ({OFd+} & Dmc+)
-  or [<noun-sub-p> & <noun-main-p>]
+  or [<noun-rel-p> & <noun-main-p>]
   or Wa-;
 
 not_much:
   ({OFd+} & Dmu+)
-  or [<noun-sub-x> & <noun-main-u>]
+  or [<noun-rel-x> & <noun-main-u>]
   or Wa-;
 
 not_all not_everything:
   ({OFd+} & Dm+)
-  or (((ALx+ & Jp+) or <noun-sub-x>) & [S+] & <CLAUSE>)
+  or (((ALx+ & Jp+) or <noun-rel-x>) & [S+] & <CLAUSE>)
   or Wa-;
 
 not_one:
   Ds+
   or (OFd+ & Dm+)
-  or (<noun-sub-s> & [Ss+] & <CLAUSE>)
+  or (<noun-rel-s> & [Ss+] & <CLAUSE>)
   or Wa-;
 
 enough.n:
@@ -1878,9 +1879,9 @@ not_enough:
     or NN+ or [[NF+]]
     or ({EN- or NIc-} & (ND+ or OD-
       or ({{@L+} & DD-} & (Dmcn+
-        or (<noun-sub-p> & [<noun-main-p>])))))))
+        or (<noun-rel-p> & [<noun-main-p>])))))))
   or (NIfu- & {NIr-} & NItu+ & (
-    ((<noun-sub-x> & (<noun-main-x> or Bsm+)) or (Us- & {Mp+}))
+    ((<noun-rel-x> & (<noun-main-x> or Bsm+)) or (Us- & {Mp+}))
     or AN+ or Yd+ or Ya+))
   or (NIfp- & {NIr-} & NItp+ & (
     NM- or AN+ or ({Xc+ & Xd-} & Ma-)
@@ -1891,9 +1892,9 @@ not_enough:
 and.j-ru:
   (NIfn- & {NIr-} & NItn+ & (NM- or Jp- or
   (NN+ or [[NF+]] or ({EN- or NIc-} & (ND+ or OD- or
-  ({{@L+} & DD-} & (Dmcn+ or (<noun-sub-p> & [<noun-main-p>])))))))) or
+  ({{@L+} & DD-} & (Dmcn+ or (<noun-rel-p> & [<noun-main-p>])))))))) or
   (NIfu- & {NIr-} & NItu+ &
-  (((<noun-sub-x> & (<noun-main-x> or Bsm+)) or (Us- & {Mp+})) or AN+ or Yd+ or Ya+));
+  (((<noun-rel-x> & (<noun-main-x> or Bsm+)) or (Us- & {Mp+})) or AN+ or Yd+ or Ya+));
 
 % and.j-sum is used in numerical sums: "It's a hundred and two in the shade."
 % It's a hundred 'n two in the shade."
@@ -1931,14 +1932,14 @@ several:
   NN+ or
   NW+ or
   ({EN- or NIc- or NA-} & (ND+ or NIn+ or
-    ({{@L+} & DD-} & (Dmcn+ or (<noun-sub-p> & [<noun-main-p>]))))) or
-  (NA- & {<noun-sub-p> & <noun-main-p>}) or
+    ({{@L+} & DD-} & (Dmcn+ or (<noun-rel-p> & [<noun-main-p>]))))) or
+  (NA- & {<noun-rel-p> & <noun-main-p>}) or
   (NA- & Xd- & TY- & Xc+)
   or Wa-
   or [[A+]];
 
 oh.zero: (NA- & NA+);
-zero.n: (NA- & NA+) or NN+ or Ds+ or (<noun-sub-s> & <noun-main-s>) or Wa-;
+zero.n: (NA- & NA+) or NN+ or Ds+ or (<noun-rel-s> & <noun-main-s>) or Wa-;
 
 % the generic "number" category
 % AN+ is needed for date-ranges
@@ -1955,7 +1956,7 @@ NUMBERS FRACTION:
   or [[NF+]]
   or [[AN+]]
   or ({EN- or NIc-} & (ND+ or NIn+ or OD- or
-    ({{@L+} & DD-} & (Dmcn+ or (<noun-sub-p> & [<noun-main-p>])))))
+    ({{@L+} & DD-} & (Dmcn+ or (<noun-rel-p> & [<noun-main-p>])))))
   or ({Wd-} & EQt+)
   or EQt-
   or ((Wd- or NMn-) & NIa+)
@@ -2039,7 +2040,7 @@ thirty-first.ti DAY-ORDINALS.ti: TM-;
       or OD-
       or ({{@L+} & DD-}
          & ([[Dmcn+]]
-           or ((<noun-sub-x> or TA-) & (JT- or IN- or [[<noun-main-x>]]))))));
+           or ((<noun-rel-x> or TA-) & (JT- or IN- or [[<noun-main-x>]]))))));
 
 % Years w/o apostrophe: e.g. 47 Ford Fairlane or 57 Chevy
 01 02 03 04 05 06 07 08 09: <date-id> or [[G+]];
@@ -2085,7 +2086,7 @@ YEAR-DATE: NUMBERS or <date-id> or [[G+]];
   or NN+
   or [[NF+]]
   or ({EN- or NIc-} & (ND+ or NIm+ or OD- or
-    ({{@L+} & DD-} & (D**n+ or (<noun-sub-x> & [<noun-main-x>])))))
+    ({{@L+} & DD-} & (D**n+ or (<noun-rel-x> & [<noun-main-x>])))))
   or TM-
   or NSn+
   or ((Wd- or NMn-) & NIa+)
@@ -2098,7 +2099,7 @@ YEAR-DATE: NUMBERS or <date-id> or [[G+]];
   or NN+
   or [[NF+]]
   or ({EN- or NIc-} & (ND+ or NIn+ or OD- or
-    ({{@L+} & DD-} & (Dmcn+ or [[Ds+]] or (<noun-sub-p> & [<noun-main-p>])))))
+    ({{@L+} & DD-} & (Dmcn+ or [[Ds+]] or (<noun-rel-p> & [<noun-main-p>])))))
   or ((Wd- or NMn-) & NIa+)
   or NSn+;
 %%%%% or [[G- & (({MXs+} & <noun-main-s>) or G+ or AN+ or YS+)]]
@@ -2128,18 +2129,18 @@ zillion.n:
       ND+
       or NIn+
       or OD-
-      or ({{@L+} & DD-} &  (Dmcn+ or (<noun-sub-p> & <noun-main-p>))))));
+      or ({{@L+} & DD-} &  (Dmcn+ or (<noun-rel-p> & <noun-main-p>))))));
 
 half_a_dozen half_a_million:
 ({EN- or NIc-} & (ND+ or NIn+ or OD- or ({{@L+} & DD-} &
-(Dmcn+ or (<noun-sub-p> & <noun-main-p>)))));
+(Dmcn+ or (<noun-rel-p> & <noun-main-p>)))));
 
 %  Dmcx-: prevents linkage to DMcn "*5 millions attended" but "Many millions attended"
 dozens scores.a hundreds.a thousands millions billions trillions
 bajillions bazillions gadzillions gagillions gajillions gazillions
 godzillions jillions jizillions kabillions kajillions katrillions
 killions umptillions zillions.a:
-  [{DD- or Dmcx-} & <noun-sub-p> & <noun-main-p>]
+  [{DD- or Dmcx-} & <noun-rel-p> & <noun-main-p>]
   or (OFd+ & (ND+ or NIn+ or Dm+));
 
 % OFd+ & Dm+: "tens of years ago ..."
@@ -2154,21 +2155,21 @@ tens:
   or NIe+
   or ({NNx-} & {EN- or NIc-}
     & (ND+ or NIn+ or OD-
-      or ({DD-} & ([[Ds+]] or Dmcn+ or (<noun-sub-x> & <noun-main-x>)))));
+      or ({DD-} & ([[Ds+]] or Dmcn+ or (<noun-rel-x> & <noun-main-x>)))));
 
 and_a_half:
   (NW- or NSn- or ND-) &
     (NNy+ or ({EN- or NIc-} & (ND+ or NIn+ or ({DD-} &
-    (Dmcn+ or (<noun-sub-p> & <noun-main-p>))))));
+    (Dmcn+ or (<noun-rel-p> & <noun-main-p>))))));
 
 quarter.i:
-NS- & {EN-} & (NF+ or (<noun-sub-x> & <noun-main-x>));
+NS- & {EN-} & (NF+ or (<noun-rel-x> & <noun-main-x>));
 thirds.m fourths.m quarters.m fifths.m sixths.m sevenths.m eighths.m
 ninths.m tenths.m:
-NW- & {EN-} & (NF+ or (<noun-sub-x> & <noun-main-x>));
+NW- & {EN-} & (NF+ or (<noun-rel-x> & <noun-main-x>));
 
 first.a: L- or Pa- or E+ or MVa- or ({Xc+ & {Xd-}} & CO+) or A+ or [Jp-] or
-TT+ or ((DD- or [[NSa-]]) & <noun-sub-x> & {<ton-verb>} & <noun-main-x>);
+TT+ or ((DD- or [[NSa-]]) & <noun-rel-x> & {<ton-verb>} & <noun-main-x>);
 
 last.a dead_last dead_fucking_last DFL:
   L-
@@ -2177,12 +2178,12 @@ last.a dead_last dead_fucking_last DFL:
   or ({Xc+ & {Xd-}} & CO+)
   or DTi+
   or TT+
-  or (DD- & <noun-sub-x> & {<ton-verb>} & <noun-main-x>)
+  or (DD- & <noun-rel-x> & {<ton-verb>} & <noun-main-x>)
   or A+
   or [Jp-];
 
 second.a: L- or Pa- or MVa- or ({Xc+ & {Xd-}} & CO+) or
-(DD- & <noun-sub-x> & {<ton-verb>} & <noun-main-x>) or NR+ or A+;
+(DD- & <noun-rel-x> & {<ton-verb>} & <noun-main-x>) or NR+ or A+;
 
 % This uses the L link for superlatives, but leads to strange parses:
 % "We celebrated their eleventh anniversary" parses differently
@@ -2192,8 +2193,8 @@ second.a: L- or Pa- or MVa- or ({Xc+ & {Xd-}} & CO+) or
 % Jp-: "Mike finished in first place, and John in third."
 third.a fourth.a fifth.a sixth.a seventh.a eighth.a ninth.a tenth.a :
 L- or Pa- or MVa- or ({Xc+ & {Xd-}} & CO+) or
-(NS- & {EN-} & NF+) or (((NS- & <noun-sub-x> & {EN-}) or
-(DD- & <noun-sub-x> & {<ton-verb>})) & <noun-main-x>) or NR+ or A+ or Jp-;
+(NS- & {EN-} & NF+) or (((NS- & <noun-rel-x> & {EN-}) or
+(DD- & <noun-rel-x> & {<ton-verb>})) & <noun-main-x>) or NR+ or A+ or Jp-;
 
 % NS-: "I gave him a third of the loot."
 eleventh.a twelfth.a thirteenth.a fourteenth.a fifteenth.a
@@ -2231,8 +2232,8 @@ ninety-first.a ninety-second.a ninety-third.a
 ninety-fourth.a ninety-fifth.a ninety-sixth.a
 ninety-seventh.a ninety-eighth.a ninety-ninth.a:
 Pa- or MVa- or ({Xc+ & {Xd-}} & CO+) or
-(NS- & {EN-} & NF+) or (((NS- & <noun-sub-x> & {EN-}) or
-(DD- & <noun-sub-x> & {<ton-verb>})) & <noun-main-x>) or NR+ or A+ or Jp-;
+(NS- & {EN-} & NF+) or (((NS- & <noun-rel-x> & {EN-}) or
+(DD- & <noun-rel-x> & {<ton-verb>})) & <noun-main-x>) or NR+ or A+ or Jp-;
 
 % Miscellaneous ordinal numbers, adjectival usage
 % prefer G+ over A+ in general, as these are typically parts of names.
@@ -2242,7 +2243,7 @@ DAY-ORDINALS.a ORDINALS.a:
   Pa- or
   MVa- or
   ({Xc+ & {Xd-}} & CO+) or
-  (DD- & <noun-sub-x> & {<ton-verb>} & <noun-main-x>) or
+  (DD- & <noun-rel-x> & {<ton-verb>} & <noun-main-x>) or
   NR+ or
   G+ or
   [A+] or
@@ -2305,7 +2306,7 @@ n.eq o.eq p.eq q.eq r.eq s.eq t.eq u.eq v.eq w.eq x.eq y.eq z.eq:
 
 fiscal.i: TY+ & <noun-main-s>;
 
-or_so: ND- & {{@L+} & DD-} & (Dmcn+ or (<noun-sub-p> & <noun-main-p>));
+or_so: ND- & {{@L+} & DD-} & (Dmcn+ or (<noun-rel-p> & <noun-main-p>));
 
 % Allows parsing of "dollars per day" or "mL/sec" but is somewhat
 % inconsistent with the equation parsing otherwise described below.
@@ -2459,7 +2460,7 @@ per "/.per": Us+ & Mp-;
   (<noun-modifiers> &
     (Dmu- or [[()]]) &
     (({[[Ds-]]} & OF+) or [[()]]) &
-    ((<noun-sub-s> & {@MXs+} &
+    ((<noun-rel-s> & {@MXs+} &
       ((Ss+ & <CLAUSE>) or SIs- or Os- or J-)) or
       AJra- or AJla+ or
       <noun-and-u>)) or
@@ -7487,7 +7488,7 @@ UNITS: <units-suffix>;
 % it might be beneficial to cost them. If this is done, make the same
 % modification for unit ranges also.
 % NUMBER-AND-UNIT:
-% ((({D*u-} or {Dmc-}) & <noun-sub-x> &
+% ((({D*u-} or {Dmc-}) & <noun-rel-x> &
 % (<noun-main-x> or Bsm+)) or (({D*u-} or {Dmc-}) & Us- & {Mp+})) or A+;
 % Above screw up the usual units processing.
 
@@ -7957,7 +7958,7 @@ and.j-r or.j-r:
 %
 % noun-conj-dep-s & SI-: Are a dog and a cat here?
 %
-% XXX There should be a noun-sub-u but this requires a lot of work ...
+% XXX There should be a noun-rel-u but this requires a lot of work ...
 <noun-conj-dep-s>: ({Xd-} & SJls- & SJrs+ & {[[Xc+]]});
 <noun-conj-dep-p>: ({Xd-} & SJlp- & SJr+  & {[[Xc+]]}) or
                    ({Xd-} & SJls- & SJrp+ & {[[Xc+]]});
@@ -7991,21 +7992,21 @@ and.j-r or.j-r:
 %
 % and.j-n but_not but_just_not and_not ,_not just_not:
 and.j-n 'n':
-  (<noun-conj-dep-s> & <noun-sub-s> & {XJa-} & (
+  (<noun-conj-dep-s> & <noun-rel-s> & {XJa-} & (
     <noun-conj-head>
     or (Spx+ & <CLAUSE>)
     or SIp-
     or Wa-
     or [{Ds-} & Os-]
     or <post-nominal-s>))
-  or (<noun-conj-dep-p> & <noun-sub-p> & {XJa-} & (
+  or (<noun-conj-dep-p> & <noun-rel-p> & {XJa-} & (
     <noun-conj-head>
     or ({Jd- & Dm-} & Spx+ & <CLAUSE>)
     or SIp-
     or Wa-
     or [{{Jd-} & Dmc-} & Op-]
     or <post-nominal-p>))
-  or (<noun-conj-dep-u> & <noun-sub-x> & {XJa-} & (
+  or (<noun-conj-dep-u> & <noun-rel-x> & {XJa-} & (
     <noun-conj-head>
     or ({Jd- & Dm-} & Sux+ & <CLAUSE>)
     or SIu-
@@ -8023,9 +8024,9 @@ but_not just_not: VJrsi- & O+;
 % EB+: "the problem, or rather, one of the problems, ..."
 %
 or.j-n:
-  (<noun-conj-dep-s> & <noun-sub-s> & {XJo-} &
+  (<noun-conj-dep-s> & <noun-rel-s> & {XJo-} &
     (<noun-conj-head> or (S*x+ & <CLAUSE>) or SIs- or [Os-] or Wa- or <post-nominal-s>)) or
-  (<noun-conj-dep-p> & <noun-sub-p> & {XJo-} &
+  (<noun-conj-dep-p> & <noun-rel-p> & {XJo-} &
     (<noun-conj-head> or (Spx+ & <CLAUSE>) or SIp- or [Op-] or Wa- or <post-nominal-p>))
   or ((Xd- & SJl- & EB+ & SJr+ & Xc+) & (Wd- & Ssx+))
   or (({Xd-} & SJl- & EB+ & SJr+ & {Xc+}) & O-);
@@ -8937,7 +8938,7 @@ much:
   or ({EEx- or H-} & (
     ECn+
     or ({OFd+} & Dmu+)
-    or (<noun-sub-s> & ([[<noun-main-s>]] or Bsm+))))
+    or (<noun-rel-s> & ([[<noun-main-s>]] or Bsm+))))
   or (AM- & (Dmuy+ or MVy- or Oy- or Jy- or EB*y-));
 
 slightly somewhat: EC+ or EA+ or MVa- or Em+;
@@ -9054,7 +9055,7 @@ nothing_but: Vd- & I+;
 % angriest.a baldest.a balmiest.a basest.a bawdiest.a biggest.a
 <superlatives>:
   ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or
-  ({NR- or ND-} & DD- & <noun-sub-x> & {<ton-verb>} & <noun-main-x>) or
+  ({NR- or ND-} & DD- & <noun-rel-x> & {<ton-verb>} & <noun-main-x>) or
   AJrs- or AJls+;
 
 /en/words/words.adj.3: <superlatives>;
@@ -9062,7 +9063,7 @@ nothing_but: Vd- & I+;
 favorite.a favourite.a:
   <superlatives>
   or ({Xc+} & {[[@Ec-]]} & [[Lf-]])
-  or ([[Ds-]] & <noun-sub-x> & {<ton-verb>} & <noun-main-x>);
+  or ([[Ds-]] & <noun-rel-x> & {<ton-verb>} & <noun-main-x>);
 
 sole.a main.a: {Xc+} & {NR-} & {[[@Ec-]]} & L-;
 
@@ -9073,7 +9074,7 @@ sole.a main.a: {Xc+} & {NR-} & {[[@Ec-]]} & L-;
 % "The coffee tastes the same as it did last year."
 same.a own.a:
   ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or
-  ((DD- or [[()]]) & <noun-sub-x> & {<ton-verb>} & [<noun-main-x>]0.1);
+  ((DD- or [[()]]) & <noun-rel-x> & {<ton-verb>} & [<noun-main-x>]0.1);
 
 % [Oy-]0.1: see immediately above.
 the_same:
@@ -9083,7 +9084,7 @@ next.a:
   ({Xc+ & {Xd-}} & CO+)
   or MVp- or DTi+ or NR+
   or ({Xc+} & {[[@Ec-]]} & L-)
-  or (DD- & <noun-sub-x> & {<ton-verb>} & <noun-main-x>);
+  or (DD- & <noun-rel-x> & {<ton-verb>} & <noun-main-x>);
 
 past.a previous.a: ({[[@Ec-]]} & {Xc+} & A+) or L- or (Pa- & {@MV+});
 
@@ -9091,20 +9092,20 @@ following.a remaining.a top.i: L-;
 
 hardest.a-s easiest.a-s:
   ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or
-  ({NR- or ND-} & DD- & <noun-sub-x> & {<tot-verb>} & <noun-main-x>) or
+  ({NR- or ND-} & DD- & <noun-rel-x> & {<tot-verb>} & <noun-main-x>) or
   ({NR- or ND-} & DD- & (AJre- or AJle+)) or
   AJrs- or AJls+;
 
 worst.a-s longest.a-s fastest.a-s furthest.a-s farthest.a-s slowest.a-s:
   ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or
-  ({NR- or ND-} & DD- & ((<noun-sub-x> & {<ton-verb>} & <noun-main-x>) or MVa-)) or
+  ({NR- or ND-} & DD- & ((<noun-rel-x> & {<ton-verb>} & <noun-main-x>) or MVa-)) or
   ({NR- or ND-} & DD- & (AJre- or AJle+)) or
   AJrs- or AJls+;
 
 % "he likes you best of all" has no determiner, just uses MVa-.
 best.a-s personal_best:
   ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or
-  ({NR- or ND-} & DD- & ((<noun-sub-x> & {<ton-verb>} & <noun-main-x>) or (MVa- & {Mp+}))) or
+  ({NR- or ND-} & DD- & ((<noun-rel-x> & {<ton-verb>} & <noun-main-x>) or (MVa- & {Mp+}))) or
   [[E+]] or
   [MVa- & {Mp+}] or
   ({NR- or ND-} & DD- & (AJre- or AJle+)) or
@@ -9867,7 +9868,7 @@ please.w thank_you: {Ic-} & Wi- & {{Xc+} & Vv+} & <verb-wall>;
 
 etc etc.: {Xi-} & Xd- & Xc+ & (MX- or MVa-);
 so_on the_like vice_versa v.v.:
-  (<noun-sub-x> & <noun-main-x>) or
+  (<noun-rel-x> & <noun-main-x>) or
   <noun-and-x> or
   ((<verb-i> or <verb-sp,pp> or <verb-pg,ge> or <verb-pv>) & {@MV+}) or
   M- or MV-;
@@ -10118,7 +10119,7 @@ but.ij and.ij or.ij not.ij also.ij then.ij but_not and_not and_yet:
 % Also -- see above, for handling of 12ft. 12in. not just 12%
 % AN- & Jp-: "... the concentration in v/v %"
 "%" ‰ ‱ :
-  (ND- & {DD-} & <noun-sub-x> & <noun-main-x>)
+  (ND- & {DD-} & <noun-rel-x> & <noun-main-x>)
   or (ND- & (OD- or AN+))
   or ({E- or EA-} & A+)
   or (AN- & Jp-);
@@ -10209,7 +10210,7 @@ ING-WORDS.g:
   [({@E- or EA-}  & A+)] or
   [<verb-ge>] or
   ((<noun-modifiers> &
-    (({D*u-} & <noun-sub-s> & (<noun-main-m> or Bsm+)) or
+    (({D*u-} & <noun-rel-s> & (<noun-main-m> or Bsm+)) or
     <noun-and-p,u> or
     (YS+ & {D*u-}) or
     (GN+ & (DD- or [()])) or
@@ -10225,7 +10226,7 @@ S-WORDS.v: [ VERB_S_T(`<vc-tr,intr>') ]0.1;
 
 S-WORDS.n:
   [(<noun-modifiers> &
-    (({NM+ or Dmc-} & <noun-sub-p> & (<noun-main-p> or Bpm+)) or
+    (({NM+ or Dmc-} & <noun-rel-p> & (<noun-main-p> or Bpm+)) or
     ({NM+ or Dmc-} & <noun-and-p>) or
     (YP+ & {Dmc-}) or
     (GN+ & (DD- or [()])) or
@@ -10282,7 +10283,7 @@ LATIN-ADJ-P-NOUN-WORDS:
 LATIN-ADJ-S-NOUN-WORDS:
   [<noun-modifiers> &
    (AN+
-   or ({NM+ or D*u-} & <noun-sub-s> & (<noun-main-m> or <rel-clause-s>))
+   or ({NM+ or D*u-} & <noun-rel-s> & (<noun-main-m> or <rel-clause-s>))
    or ({NM+ or D*u-} & <noun-and-p,u>)
    or (YS+ & {D*u-})
    or (GN+ & (DD- or [()]))
@@ -10294,7 +10295,7 @@ LATIN-ADJ-S-NOUN-WORDS:
 UNKNOWN-WORD.n:
   <noun-modifiers> &
     (AN+
-    or ({NM+ or ({Jd-} & D*u-)} & <noun-sub-s> & (<noun-main-m> or <rel-clause-x>))
+    or ({NM+ or ({Jd-} & D*u-)} & <noun-rel-s> & (<noun-main-m> or <rel-clause-x>))
     or ({NM+ or ({Jd-} & D*u-)} & <noun-and-p,u>)
     or SJrp-
     or (YS+ & {D*u-})
@@ -10350,7 +10351,7 @@ propension.n:
   (<noun-modifiers> & ((Ds- & {@M+} & {(<ton-verb> or (R+ & Bs+)) & {[[@M+]]}} & {@MXs+} & (<noun-main-s> or Bsm+)) or Us- or (YS+ & Ds-) or (GN+ & (DD- or [()])))) or AN+;
 
 longest-term.a:
-  ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or ({NR- or ND-} & DD- & ((<noun-sub-x> & {<ton-verb>} & <noun-main-x>) or MVa-));
+  ({Xc+} & {NR-} & {[[@Ec-]]} & La-) or ({NR- or ND-} & DD- & ((<noun-rel-x> & {<ton-verb>} & <noun-main-x>) or MVa-));
 
 longer-term.a:
   ({ECa-} & (({[[@Ec-]]} & {Xc+} & Am+)
