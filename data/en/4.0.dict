@@ -127,10 +127,14 @@ nonCAP.zzz: ZZZ-;
 % Ss*s+: blocks links to Ss*t- which accepts singular subject, but
 %        requires plural object.  See "are.v" for examples.
 %
-<noun-main-s>:
-  (Ss*s+ & <CLAUSE>) or SIs- or (Js- & {Mf+}) or Os-
+<noun-subj-s>:
+  (Ss*s+ & <CLAUSE>) or SIs-
   or <post-nominal-s>
   or <costly-null>;
+
+<noun-obj-s>: (Js- & {Mf+}) or Os-;
+
+<noun-main-s>: <noun-subj-s> or <noun-obj-s>;
 
 % noun-main-e: used for proper names (named entities)
 % Os*e- is used to allow certain adjectival uses.
@@ -149,10 +153,14 @@ nonCAP.zzz: ZZZ-;
 % noun-main-u -- u == uncountable
 % TODO: alter this to use Su+, SIu- someday. likewise Buj+
 % Doing this requires adding Su- links to many entries
-<noun-main-u>:
-  (Ss+ & <CLAUSE>) or SIs- or Ju- or Ou-
+<noun-subj-u>:
+  (Ss+ & <CLAUSE>) or SIs-
   or <post-nominal-s>
   or <costly-null>;
+
+<noun-obj-u>: Ju- or Ou-;
+
+<noun-main-u>: <noun-subj-u> or <noun-obj-u>;
 
 % noun-main-m -- m == mass
 % TODO: get rid of this someday.
@@ -611,7 +619,8 @@ HYPHENATED-WORDS.n:
   <common-phonetic>
   or (({NMa+} & AN+)
     or ((NM+ or ({[NM+]1.5} & (Ds**c- or <no-det-null>)))
-      & ((<noun-rel-s> & (<noun-main-s> or <rel-clause-s>))
+      & ((<noun-rel-s> & (<noun-subj-s> or <rel-clause-s>))
+        or <noun-obj-s>
         or <noun-and-s>))
     or (YS+ & Ds**c-));
 
@@ -678,7 +687,9 @@ PL-GREEK-LETTER-AND-NUMBER: <generic-plural-id>;
     or Up-
     or ({Dm-} & [Wa-]0.02)
     or ({NM+ or ({{Dmu-} & Jd-} & Dmu-)}
-      & ((<noun-rel-s> & (<noun-main-u> or <rel-clause-s>)) or <noun-and-p,u>))
+      & ((<noun-rel-s> & (<noun-subj-u> or <rel-clause-s>))
+         or <noun-obj-u>
+         or <noun-and-p,u>))
     or (YS+ & {Dmu-})
     );
 
