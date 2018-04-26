@@ -228,6 +228,12 @@ LATIN-ADJ-WORDS: /^\w.+us$/ % must appear after -ous in this file
 LATIN-ADJ-P-NOUN-WORDS: /^\w.+is?$/
 LATIN-ADJ-S-NOUN-WORDS: /^\w.+um$/
 
+% Treat angle-bracketed constructions as a single word-unit. This allows
+% WORD-IN-GTLT: /^<.+>$/
+% WORD-IN-GTLT: /^<\w/   % works
+% WORD-IN-GTLT: /^<.*>$/  % works
+WORD-IN-GTLT: /^<[^>]*>$/
+
 
 % Hyphenated words. In the original LG morpho-guessing system that
 % predated the regex-based system, hyphenated words were detected
