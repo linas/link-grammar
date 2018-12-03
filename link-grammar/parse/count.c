@@ -268,6 +268,54 @@ static Count_bin pseudocount(count_context_t * ctxt,
 	return *count;
 }
 
+#define FM_ID_OFFSET (1<<23)
+
+static int is_lcount(count_context_t *ctxt, int lw, int w,
+                              Connector *e)
+{
+	Connector wc;
+	Table_connector *r;
+
+	wc.suffix_id = w+FM_ID_OFFSET;
+	r = find_table_pointer(ctxt, lw, w, e, &wc, 0);
+
+	if (NULL == r) return -1;
+	return r->count == 1;
+}
+
+static int is_rcount(count_context_t *ctxt, int w, int rw,
+                              Connector *e)
+{
+	Connector wc;
+	Table_connector *r;
+
+	wc.suffix_id = w+FM_ID_OFFSET;
+	r = find_table_pointer(ctxt, w, rw, &wc, e, 0);
+
+	if (NULL == r) return -1;
+	return r->count == 1;
+}
+
+static void store_le_w_count(count_context_t *ctxt, int lw, int w,
+                               Connector *e, int le_w_count)
+{
+	Connector wc;
+	//assert(le_w_count == 0 || le_w_count == 1);
+
+	wc.suffix_id = w+FM_ID_OFFSET;
+	table_store(ctxt, lw, w, e, &wc, 0)->count = le_w_count;
+}
+
+static void store_re_w_count(count_context_t *ctxt, int w, int rw,
+                               Connector *e, int re_w_count)
+{
+	Connector wc;
+	//assert(re_w_count == 0 || re_w_count == 1);
+
+	wc.suffix_id = w+FM_ID_OFFSET;
+	table_store(ctxt, w, rw, &wc, e, 0)->count = re_w_count;
+}
+
 /**
  * Return the number of optional words strictly between w1 and w2.
  */
@@ -427,7 +475,7 @@ static Count_bin do_count(
 
 	if (le == NULL)
 	{
-		start_word = lw+1;
+		start_word = MAX(lw+1, rw-re->length_limit);
 	}
 	else
 	{
@@ -436,7 +484,7 @@ static Count_bin do_count(
 
 	if (re == NULL)
 	{
-		end_word = rw;
+		end_word = MIN(rw, lw+le->length_limit+1);
 	}
 	else
 	{
@@ -446,13 +494,94 @@ static Count_bin do_count(
 	total = zero;
 	fast_matcher_t *mchxt = ctxt->mchxt;
 
+#define LCOUNT_CACHE 1
+#define RCOUNT_CACHE 1
+
 	for (w = start_word; w < end_word; w++)
 	{
-		size_t mlb = form_match_list(mchxt, w, le, lw, re, rw);
+		int le_w_count = 1;
+		Connector *le_match = le;
+		bool need_le_w_count = false;
+		bool lcount_found = false;
+
+		int re_w_count = 1;
+		Connector *re_match = re;
+		bool need_re_w_count = false;
+		bool rcount_found = false;
+
+		if ((null_count == 0) && (ctxt->sent->length > 36))
+		{
+#if LCOUNT_CACHE
+			if (le != NULL)
+			{
+				le_w_count = is_lcount(ctxt, lw, w, le);
+#if 00
+				fprintf(stderr, "CHECK IS_LCOUNT: suffix_id %d w %d: %d (SKIP %d)\n",
+					 le->suffix_id, w, le_w_count, 0 == le_w_count && NULL == re);
+#endif
+				if (le_w_count == 0)
+				{
+					if (re == NULL) continue;
+					le_match = NULL;
+				}
+				else if (le_w_count == -1 && re == NULL) need_le_w_count = true;
+			}
+#endif /* LCOUNT_CACHE */
+
+#if RCOUNT_CACHE
+			if (re != NULL)
+			{
+				re_w_count = is_rcount(ctxt, w, rw, re);
+#if 00
+				fprintf(stderr, "CHECK IS_RCOUNT: suffix_id %d w %d: %d (SKIP %d)\n",
+					 re->suffix_id, w, re_w_count, 0 == re_w_count && NULL == le);
+#endif
+				if (re_w_count == 0)
+				{
+					if (le == NULL) continue;
+					re_match = NULL;
+				}
+				else if (re_w_count == -1 && le == NULL) need_re_w_count = true;
+			}
+#endif /* RCOUNT_CACHE */
+		}
+
+		size_t mlb = form_match_list(mchxt, w, le_match, lw, re_match, rw);
 #ifdef VERIFY_MATCH_LIST
 		unsigned int id = get_match_list_element(mchxt, mlb) ?
 		                  get_match_list_element(mchxt, mlb)->match_id : 0;
 #endif
+#if LCOUNT_CACHE
+		if (need_le_w_count)
+		{
+			size_t mle;
+			for (mle = mlb; get_match_list_element(mchxt, mle) != NULL; mle++)
+				if (get_match_list_element(mchxt, mle)->match_left) break;
+#if 00
+			fprintf(stderr, "ID %d: le->suffix_id %d w %d: %d\n",
+					  id, le->suffix_id, w, le_w_count);
+#endif
+			if (get_match_list_element(mchxt, mle) == NULL)
+			{
+				store_le_w_count(ctxt, lw, w, le, 0);
+#if 00
+				fprintf(stderr, "ID %d: le->suffix_id %d w %d: STORE1 %d\n",
+			        id, le->suffix_id, w, lcount_found);
+#endif
+				pop_match_list(mchxt, mlb);
+				continue;
+			}
+		}
+#endif /* LCOUNT_CACHE */
+#if 00
+		else
+		{
+			if (le != NULL)
+			fprintf(stderr, "ID %d: suffix_id %d w %d: %d\n",
+						  id, le->suffix_id, w, le_w_count);
+		}
+#endif
+
 		for (size_t mle = mlb; get_match_list_element(mchxt, mle) != NULL; mle++)
 		{
 			Disjunct *d = get_match_list_element(mchxt, mle);
@@ -526,17 +655,20 @@ static Count_bin do_count(
 				{
 					r_any = pseudocount(ctxt, w, rw, d->right->next, re->next, rnull_cnt);
 					rightpcount = (hist_total(&r_any) != 0);
+//if (rightpcount) fprintf(stderr, "leftpcount r_any\n");
 					if (!rightpcount && re->multi)
 					{
 						r_cmulti =
 							pseudocount(ctxt, w, rw, d->right->next, re, rnull_cnt);
 						rightpcount |= (hist_total(&r_cmulti) != 0);
+//if (rightpcount) fprintf(stderr, "leftpcount r_cmulti\n");
 					}
 					if (!rightpcount && d->right->multi)
 					{
 						r_dmulti =
 							pseudocount(ctxt, w,rw, d->right, re->next, rnull_cnt);
 						rightpcount |= (hist_total(&r_dmulti) != 0);
+//if (rightpcount) fprintf(stderr, "leftpcount r_dmulti\n");
 					}
 					if (!rightpcount && d->right->multi && re->multi)
 					{
@@ -546,7 +678,8 @@ static Count_bin do_count(
 					}
 				}
 
-				if (!leftpcount && !rightpcount) continue;
+				if (!leftpcount && !rightpcount && !(need_re_w_count && !rcount_found))
+					continue;
 
 #define COUNT(c, do_count) \
 	{ c = TRACE_LABEL(c, do_count); }
@@ -576,8 +709,8 @@ static Count_bin do_count(
 			 * bother counting the other term at all, in that case. */
 				Count_bin leftcount = zero;
 				Count_bin rightcount = zero;
-				if (leftpcount &&
-				    (rightpcount || (0 != hist_total(&l_bnr))))
+				if (leftpcount && ((need_le_w_count && !lcount_found) ||
+				                   rightpcount || (0 != hist_total(&l_bnr))))
 				{
 					CACHE_COUNT(l_any, leftcount = count,
 						do_count(ctxt, lw, w, le->next, d->left->next, lnull_cnt));
@@ -593,15 +726,18 @@ static Count_bin do_count(
 
 					if (0 < hist_total(&leftcount))
 					{
+						lcount_found = true;
 						/* Evaluate using the left match, but not the right */
 						CACHE_COUNT(l_bnr, hist_muladdv(&total, &leftcount, d->cost, count),
 							do_count(ctxt, w, rw, d->right, re, rnull_cnt));
 					}
 				}
 
-				if (rightpcount &&
-				    ((0 < hist_total(&leftcount)) || (0 != hist_total(&r_bnl))))
+				//fprintf(stderr, "ID %d: need_re_w_count %d Rmatch %d\n", id, need_re_w_count, Rmatch);
+				if (rightpcount && ((need_re_w_count && !rcount_found) ||
+				         ((0 < hist_total(&leftcount)) || (0 != hist_total(&r_bnl)))))
 				{
+					//fprintf(stderr, "ID %d: ENTER rnull_cnt %d\n", id, rnull_cnt);
 					CACHE_COUNT(r_any, rightcount = count,
 						do_count(ctxt, w, rw, d->right->next, re->next, rnull_cnt));
 					if (re->multi)
@@ -616,6 +752,15 @@ static Count_bin do_count(
 
 					if (0 < hist_total(&rightcount))
 					{
+						rcount_found = true;
+#if 00
+						if (hist_total(&r_any)>0)
+							fprintf(stderr, "ID %d: rightcount r_any\n", id);
+						else if (hist_total(&r_cmulti)>0)
+							fprintf(stderr, "ID %d: rightcount r_cmulti\n", id);
+						else if (hist_total(&r_dmulti)>0)
+							fprintf(stderr, "ID %d: rightcount r_dmulti\n", id);
+#endif
 						if (le == NULL)
 						{
 							/* Evaluate using the right match, but not the left */
@@ -630,6 +775,15 @@ static Count_bin do_count(
 						}
 					}
 				}
+				if (need_re_w_count && !rcount_found && (0 != hist_total(&l_bnr)))
+				{
+					Count_bin t;
+					CACHE_COUNT(l_bnr, if (count) rcount_found = true,
+						t = do_count(ctxt, w, rw, d->right, re, rnull_cnt));
+					//fprintf(stderr, "ID %d: Call l_bnr: %lld\n", id, t);
+				}
+				//fprintf(stderr, "ID %d: rightcount %lld l_bnr %lld rcount_found %d\n",
+				//        id, rightcount, l_bnr, rcount_found);
 
 				/* Sigh. Overflows can and do occur, esp for the ANY language. */
 				if (INT_MAX < hist_total(&total))
@@ -645,6 +799,27 @@ static Count_bin do_count(
 				}
 			}
 		}
+
+		//assert(!((le_w_count == 0) && lcount_found), "ID %d: %d & %d\n", id, le_w_count==0, lcount_found);
+		if (need_le_w_count)
+		{
+			store_le_w_count(ctxt, lw, w, le, lcount_found);
+#if 00
+			fprintf(stderr, "ID %d: le->suffix_id %d w %d: STORE2 %d\n",
+			        id, le->suffix_id, w, lcount_found);
+#endif
+		}
+
+		//assert(!((re_w_count == 0) && rcount_found), "ID %d: %d & %d\n", id, re_w_count==0, rcount_found);
+		if (need_re_w_count)
+		{
+			store_re_w_count(ctxt, w, rw, re, rcount_found);
+#if 00
+			fprintf(stderr, "ID %d: re->suffix_id %d w %d: STORE2 %d\n",
+			        id, re->suffix_id, w, rcount_found);
+#endif
+		}
+
 		pop_match_list(mchxt, mlb);
 	}
 	t->count = total;
