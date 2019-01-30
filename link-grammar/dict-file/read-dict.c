@@ -1179,6 +1179,11 @@ static Exp * in_parens(Dictionary dict)
 			return NULL;
 		}
 		return operator_exp(dict, OR_type);
+	} else if (strcmp(dict->token, "par")==0) {
+		if (!link_advance(dict)) {
+			return NULL;
+		}
+		return operator_exp(dict, PAR_type);
 	} else {
 		return expression(dict);
 	}
@@ -1397,7 +1402,7 @@ static Exp * make_expression(Dictionary dict)
 		{
 			op = AND_type;
 		}
-		/* Commuting OR */
+		/* Exclusive-choice OR */
 		else if (is_equal(dict, '|') || (strcmp(dict->token, "or") == 0))
 		{
 			op =  OR_type;
@@ -1408,6 +1413,11 @@ static Exp * make_expression(Dictionary dict)
 			/* Part 1/2 of SYM_AND processing */
 			op = AND_type;
 			is_sym_and = true; /* processing to be completed after next argument */
+		}
+		/* Exclusive-AND */
+		else if (strcmp(dict->token, "par") == 0)
+		{
+			op = PAR_type;
 		}
 		else
 		{
@@ -1436,7 +1446,7 @@ static Exp * make_expression(Dictionary dict)
 		if (el_tail == NULL)
 			el_tail = e_head->u.l;
 	}
-		/* unreachable */
+	/* unreachable */
 }
 
 #endif

@@ -31,8 +31,9 @@ typedef struct condesc_struct condesc_t;
  */
 typedef enum
 {
-	OR_type = 1,
-	AND_type,
+	OR_type = 1,  // Exclusive-choice OR
+	AND_type,     // non-commuting AND ("with")
+	PAR_type,     // Exclusive-AND
 	CONNECTOR_type
 } Exp_type;
 
