@@ -136,7 +136,7 @@ nonCAP.zzz: ZZZ-;
 %        requires plural object.  See "are.v" for examples.
 %
 <noun-main-s>:
-  (Ss*s+ & <CLAUSE>) or SIs- or (Js- & ({Jk-} or {Mf+})) or Os-
+  (Ss*s+ & <CLAUSE>) or SIs- or ((Js- par Bs+) & ({Jk-} or {Mf+})) or Os-
   or <post-nominal-s>
   or <costly-null>;
 

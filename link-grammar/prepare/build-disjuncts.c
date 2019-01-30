@@ -15,7 +15,7 @@
 
 #include "build-disjuncts.h"
 #include "connectors.h"
-//#include "dict-common/print-dict.h"      // print_expression()
+#include "dict-common/dict-api.h"      // print_expression()
 #include "dict-common/dict-structures.h"   // Exp_struct()
 #include "disjunct-utils.h"
 #include "utilities.h"
@@ -44,6 +44,7 @@ typedef struct
 	Pool_desc *Clause_pool;
 } clause_context;
 
+#define DEBUG 1
 #ifdef DEBUG
 static void print_Tconnector_list(Tconnector * e);
 static void print_clause_list(Clause * c);
@@ -228,9 +229,15 @@ static Clause * build_clause(Exp *e, clause_context *ct)
 	}
 	else
 	{
+print_expression(e);
+print_clause_list(c);
 		assert(false, "an expression node with no type");
 	}
 
+printf("duuuuuuuuuuude exp=\n");
+print_expression(e);
+print_clause_list(c);
+printf("\n\n");
 	/* c now points to the list of clauses */
 	for (c1 = c; c1 != NULL; c1 = c1->next)
 	{
