@@ -12,6 +12,7 @@
 /*************************************************************************/
 
 #include <limits.h>
+#include <sys/mman.h>
 
 #include "link-includes.h"
 #include "api-structures.h"
@@ -89,7 +90,7 @@ static void init_table(count_context_t *ctxt, size_t sent_len)
 
 	if (ctxt == NULL)
 	{
-		if (kept_table) free(kept_table);
+		if (kept_table) munmap(kept_table, 1UL<<log2_table_size);
 		kept_table = NULL;
 		log2_table_size = 0;
 		return;
@@ -124,8 +125,10 @@ static void init_table(count_context_t *ctxt, size_t sent_len)
 	{
 		log2_table_size = shift;
 
-		if (kept_table) free(kept_table);
-		kept_table = malloc(ctxt->table_size * sizeof(Table_connector*));
+		if (kept_table) munmap(kept_table, 1UL<<log2_table_size);
+		kept_table = mmap(0, ctxt->table_size * sizeof(Table_connector*),
+			PROT_READ | PROT_WRITE,
+			MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
 
 		// atexit(free_kept_table);
 	}
