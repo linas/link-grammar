@@ -988,7 +988,7 @@ accusation.n idea.n assumption.n implication.n
 indication.n inkling.n amount.n answer.n:
   <noun-modifiers> & (
     AN+
-    or (<Dsv> & {@M+} & {(TH+ or (R+ & Bs+)) & {[[@M+]]}} & {@MXs+} &
+    or (<Dsv> & {@M+} & {(TH+ or <embed-verb> or (R+ & Bs+)) & {[[@M+]]}} & {@MXs+} &
       (<noun-main2-s> or
       (Ss*t+ & <CLAUSE>) or
       SIs*t- or
@@ -1010,7 +1010,7 @@ proposition.n prospect.n presupposition.n supposition.n finding.n
 crux.n shame.n thing.n bet.n guess.n:
   <noun-modifiers> & (
     AN+
-    or (<Dsc> & {@M+} & {(TH+ or (R+ & Bs+)) & {[[@M+]]}} & {@MXs+} &
+    or (<Dsc> & {@M+} & {(TH+ or <embed-verb> or (R+ & Bs+)) & {[[@M+]]}} & {@MXs+} &
       (<noun-main2-s> or
       (Ss*t+ & <CLAUSE>) or
       SIs*t- or
@@ -1180,7 +1180,9 @@ incentive.n panache.n balls.n-u cojones.n-u:
 /en/words/words.n.3.y: <noun-to>;
 
 % {Jd-}: "tons of offers"
-% TH+: What are the CHANCES that this could happen?
+% TH+: What are the CHANCES THAT this could happen?
+% <embed-verb>: What are the CHANCES this could happen?
+%
 excuses.n decisions.n proposals.n failures.n efforts.n attempts.n
 refusals.n pledges.n urges.n missions.n rights.n desires.n needs.n
 ambitions.n capacities.n mandates.n promises.n abilities.n options.n
@@ -1189,7 +1191,7 @@ responsibilities.n chances.n campaigns.n offers.n pressures.n
 obligations orders.n temptations.n vows.n permits.n impetuses.n
 proclivities.n propensities.n moves.n votes.n bills.n incentives.n:
   (<noun-modifiers> &
-    (({{Jd-} & Dmc-} & {@M+} & {(<ton-verb> or TH+ or (R+ & Bp+)) & {[[@M+]]}} & {@MXp+} &
+    (({{Jd-} & Dmc-} & {@M+} & {(<ton-verb> or TH+ or <embed-verb> or (R+ & Bp+)) & {[[@M+]]}} & {@MXp+} &
       (<noun-main-p> or
       <rel-clause-p>)) or
     ({Dmc-} & <noun-and-p>) or
