@@ -1181,6 +1181,7 @@ uint64_t count_clause(const Exp *e)
 	}
 	else
 	{
+printf("duuude e=%p type=%d\n", e, e->type);
 		assert(false, "Unknown expression type %d", (int)e->type);
 	}
 

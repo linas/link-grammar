@@ -229,15 +229,15 @@ count_clause(dn->exp));
 
 		// The connector sequence the second Atom.
 		// Loop over the connectors in the connector sequence.
-		const Handle& conseq = sect->getOutgoingAtom(1);
+		Handle conseq = sect->getOutgoingAtom(1);
 		for (const Handle& ctcr : reverse(conseq->getOutgoingSet()))
 		{
 			// The connection target is the first Atom in the connector
-			const Handle& tgt = ctcr->getOutgoingAtom(0);
-			const Handle& dir = ctcr->getOutgoingAtom(1);
+			Handle tgt = ctcr->getOutgoingAtom(0);
+			Handle dir = ctcr->getOutgoingAtom(1);
 
 			// The link is the connection of both of these.
-			const Handle& lnk = local->asp->add_link(SET_LINK, wrd, tgt);
+			Handle lnk = local->asp->add_link(SET_LINK, wrd, tgt);
 
 			// Assign an upper-case name to the link.
 			std::string slnk = get_linkname(local, lnk);
@@ -245,6 +245,7 @@ count_clause(dn->exp));
 
 			Exp* e = make_connector_node(dict, dict->Exp_pool,
 			                 slnk.c_str(), sdir.c_str()[0], false);
+if(0==e->type) printf("duuuuuuude faillllllllllllllllllll\n");
 			if (nullptr == andex)
 			{
 				andex = e;
@@ -252,6 +253,7 @@ count_clause(dn->exp));
 			}
 
 			andex = make_and_node(dict->Exp_pool, e, andex);
+if(0==andex->type) printf("duuuuuuude and faillllllllllllllllllll\n");
 		}
 		// print_section(dict, sect);
 		// printf("Word %s expression %s\n", ssc, lg_exp_stringify(andex));
@@ -260,6 +262,7 @@ count_clause(dn->exp));
 			exp = andex;
 		else
 			exp = make_or_node(dict->Exp_pool, exp, andex);
+if(0==exp->type) printf("duuuuuuude orex faillllllllllllllllllll\n");
 	}
 
 	dn = (Dict_node*) malloc(sizeof(Dict_node));
