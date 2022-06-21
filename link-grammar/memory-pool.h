@@ -49,7 +49,7 @@ void pool_free(Pool_desc *, void *e);
  */
 
 #ifndef POOL_ALLOCATOR
-#define POOL_ALLOCATOR 1
+#define POOL_ALLOCATOR 0
 #endif
 
 #if !POOL_ALLOCATOR

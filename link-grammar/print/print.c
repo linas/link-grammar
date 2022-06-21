@@ -1475,7 +1475,6 @@ void print_sentence_word_alternatives(dyn_str *s, Sentence sent,
 				}
 				else if (word_split) append_string(s, " %s", wt);
 			}
-
 		}
 		wi--;
 

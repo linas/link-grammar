@@ -808,6 +808,7 @@ static int x_issue_special_command(char * line, Command_Options *copts, Dictiona
 		{
 			printf("%s\n", out);
 		   free(out);
+#if TEMP_DEBUG_DISABLE_FOR_NOW_XXX_FIXME
 			out = dict_display_word_expr(dict, s+1, opts);
 			if (NULL != out)
 			{
@@ -818,6 +819,7 @@ static int x_issue_special_command(char * line, Command_Options *copts, Dictiona
 			{
 				prt_error("Error: '%s': Internal Error: Missing expression.\n", s+1);
 			}
+#endif
 		}
 		else
 		{

@@ -186,12 +186,28 @@ void print_section(Dictionary dict, const Handle& sect)
 
 // ===============================================================
 
+void check(Dictionary dict, const char * msg)
+{
+	Dict_node * dn = dict_node_lookup(dict, "I");
+if (dn)
+{
+printf("Checking %s cached >>%s<< with %lu djs on it\n", msg, dn->string,
+count_clause(dn->exp));
+}
+}
+
 Dict_node * as_lookup_list(Dictionary dict, const char *s)
 {
+check(dict, "on entry");
 	// Do we already have this word cached? If so, pull from
 	// the cache.
 	Dict_node * dn = dict_node_lookup(dict, s);
 
+if (dn)
+{
+printf("found cached >>%s<< with %lu djs on it\n", dn->string,
+count_clause(dn->exp));
+}
 	if (dn) return dn;
 
 	const char* ssc = string_set_add(s, dict->string_set);
@@ -237,8 +253,8 @@ Dict_node * as_lookup_list(Dictionary dict, const char *s)
 
 			andex = make_and_node(dict->Exp_pool, e, andex);
 		}
-		print_section(dict, sect);
-		printf("Word %s expression %s\n", ssc, lg_exp_stringify(andex));
+		// print_section(dict, sect);
+		// printf("Word %s expression %s\n", ssc, lg_exp_stringify(andex));
 
 		if (nullptr == exp)
 			exp = andex;
@@ -251,12 +267,14 @@ Dict_node * as_lookup_list(Dictionary dict, const char *s)
 	dn->string = ssc;
 	dn->exp = exp;
 
+check(dict, "pre insert");
 	// Cache the result; avoid repeated lookups.
 	dict->root = dict_node_insert(dict, dict->root, dn);
 	dict->num_entries++;
-printf("duuude as_lookup_list %d for >>%s<< had=%lu\n",
-dict->num_entries, ssc, sects.size());
+printf("duuude as_lookup_list %d for >>%s<< had=%lu sections, %lu djs\n",
+dict->num_entries, ssc, sects.size(), count_clause(dn->exp));
 
+check(dict, "post insert");
 	// Rebalance the tree every now and then.
 	if (0 == dict->num_entries% 30)
 	{
@@ -267,6 +285,7 @@ dict->num_entries, ssc, sects.size());
 	// Perform the lookup. We cannot return the dn above, as the
 	// as_free_llist() below will delete it, leading to mem corruption.
 	dn = dict_node_lookup(dict, ssc);
+check(dict, "post final look");
 	return dn;
 }
 
