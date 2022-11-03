@@ -44,18 +44,13 @@ public:
 
 	// Basic Sections
 	bool enable_sections;
-
-	// Supplements
-	int left_pairs;
-	int right_pairs;
-
-	int left_any;
-	int right_any;
+	bool extra_pairs;
+	bool extra_any;
 
 	// Disjuncts made from pairs
-	int pair_disjuncts;
-	int pair_with_any;
-	int any_disjuncts;
+	bool pair_disjuncts;
+	bool pair_with_any;
+	bool any_disjuncts;
 };
 
 bool section_boolean_lookup(Dictionary dict, const char *s);

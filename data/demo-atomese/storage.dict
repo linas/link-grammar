@@ -130,12 +130,9 @@
 %
 % The cost of these connectors is determined by the pair-config, above.
 %
-% If set to zero, these supplementary links will not be generated. If set
-% to 2 or more, then that many extra optional connectors will be added.
-%
+% If set to zero, these supplementary links will not be generated.
 % If sections are not enabled, then these parameters have no effect.
-#define left-pairs 1;
-#define right-pairs 1;
+#define extra-pairs 1;
 
 % Same as above, but the supplementary connectors will all be of type `ANY`,
 % and thus can connect to anything. Since these can connect to anything,
@@ -146,34 +143,32 @@
 %
 % Setting to zero disables this.
 % If sections are disabled, the these parameters have no effect.
-#define left-any 2;
-#define right-any 2;
+#define extra-any 1;
 
 % Create expressions that consist entirely of word-pair relationships.
-% The disjuncts will have up to the specified number of connectors; 4 is
-% the default. Setting this to zero disables the creation of such
-% disjuncts. If `enable-sections` above is turned off, the result will be
-% pure MPG parsing.
+% Setting this to zero disables the creation of such disjuncts. If
+% `enable-sections` above is turned off, then the only disjuncts will be
+% the ones created from pairs, and the parse result will be pure MPG
+% parsing.
 %
 % Each connector has a cost is that is determined by the config parameters,
 % above.
-#define pair-disjuncts 4;
+#define pair-disjuncts 1;
 
 % Supplement the above with additional connectors of type "ANY". This is
 % useful for providing links between words that don't already exist as
 % pairs in the dataset. This has no effect, if `pair-disjuncts` (above)
 % is set to zero.
-#define pair-with-any 2;
+#define pair-with-any 1;
 
 % Create expressions that consist entirely of "ANY" link-types.
-% The disjuncts will have up to the specified number of connectors; 4 is
-% the default. Setting this to zero disables the creation of such
-% disjuncts. If `enable-sections` and `pair-disjuncts` (above) are turned
+% Setting this to zero disables the creation of such disjuncts.
+% If `enable-sections` and `pair-disjuncts` (above) are turned
 % off, the result will be pure random planar tree parsing.
 %
 % Each connector has a cost is that is determined by the config parameters,
 % above.
-#define any-disjuncts 4;
+#define any-disjuncts 1;
 
 % -----------------------
 % For this file to be read, at least one bogus entry is needed. It is
