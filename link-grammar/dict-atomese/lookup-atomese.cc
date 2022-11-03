@@ -267,8 +267,7 @@ bool as_boolean_lookup(Dictionary dict, const char *s)
 	if (local->enable_sections)
 		found = section_boolean_lookup(dict, s);
 
-	if (0 < local->pair_disjuncts or
-	    0 < local->left_pairs or 0 < local->right_pairs)
+	if (local->pair_disjuncts or local->extra_pairs)
 	{
 		bool have_pairs = pair_boolean_lookup(dict, s);
 		found = found or have_pairs;
@@ -354,22 +353,21 @@ Exp* make_exprs(Dictionary dict, const Handle& germ)
 	Exp* orhead = nullptr;
 
 	// Create disjuncts consisting entirely of "ANY" links.
-	if (0 < local->any_disjuncts)
+	if (local->any_disjuncts)
 	{
-		Exp* any = make_any_exprs(dict, local->any_disjuncts);
+		Exp* any = make_any_exprs(dict);
 		or_enchain(dict, orhead, any);
 	}
 
 	// Create disjuncts consisting entirely of word-pair links.
-	if (0 < local->pair_disjuncts or
-	    0 < local->left_pairs or 0 < local->right_pairs)
+	if (local->pair_disjuncts or local->extra_pairs)
 	{
-		Exp* cpr = make_cart_pairs(dict, germ, local->pair_disjuncts);
+		Exp* cpr = make_pair_exprs(dict, germ);
 
 		// Add "ANY" links, if requested.
-		if (0 < local->pair_with_any)
+		if (local->pair_with_any)
 		{
-			Exp* ap = make_any_exprs(dict, local->pair_with_any);
+			Exp* ap = make_any_exprs(dict);
 			Exp* dummy;
 			and_enchain_left(dict, cpr, dummy, ap);
 		}
