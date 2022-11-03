@@ -1,4 +1,9 @@
 
+XXX ABANDON SHIP!
+
+This simplifcation was a good idea, but won't work, because it needs a
+"commutative and", which we don't have.
+
 (Experimental) AtomSpace Dictionary
 ===================================
 This directory provides code that can access dictionary data held in
