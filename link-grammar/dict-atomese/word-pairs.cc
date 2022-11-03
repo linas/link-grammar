@@ -147,7 +147,7 @@ Exp* make_pair_exprs(Dictionary dict, const Handle& germ)
 
 		// Create the connector
 		Exp* eee = make_connector_node(dict,
-			dict->Exp_pool, slnk.c_str(), cdir, false);
+			dict->Exp_pool, slnk.c_str(), cdir, true);
 
 		eee->cost = cost;
 
@@ -159,57 +159,16 @@ Exp* make_pair_exprs(Dictionary dict, const Handle& germ)
 
 // ===============================================================
 
-/// Create exprs that consist of a Cartesian product of pairs.
-/// Given a word, a lookup is made to find all word-pairs holding
-/// that word. This is done by `make_pair_exprs()`, above. Then
-/// this is ANDED against itself N times, and the result is returned.
-/// The N is the `arity` argument.
-///
-/// For example, if `make_pair_exprs()` returns `(A+ or B- or C+)`
-/// and arity is 3, then this will return `(A+ or B- or C+ or ())
-/// and (A+ or B- or C+ or ()) and (A+ or B- or C+ or ())`. When
-/// this is exploded into disjuncts, any combination is possible,
-/// from size zero to three. That's why its a Cartesian product.
-Exp* make_cart_pairs(Dictionary dict, const Handle& germ, int arity)
-{
-	if (0 >= arity) return nullptr;
-
-	Exp* andhead = nullptr;
-	Exp* andtail = nullptr;
-
-	Exp* epr = make_pair_exprs(dict, germ);
-	if (nullptr == epr) return nullptr;
-
-	Exp* optex = make_optional_node(dict->Exp_pool, epr);
-	and_enchain_right(dict, andhead, andtail, optex);
-
-	for (int i=1; i< arity; i++)
-	{
-		Exp* opt = make_optional_node(dict->Exp_pool, epr);
-		and_enchain_right(dict, andhead, andtail, opt);
-	}
-
-	// Could verify that it all multiplies out as expected.
-	// lg_assert(arity * size_of_expression(epr) ==
-	//           size_of_expression(andhead));
-
-	return andhead;
-}
-
-// ===============================================================
-
 /// Create exprs that are cartesian products of ANY links. The
 /// corresponding disjuncts will have `arity` number of connectors.
 /// If these are used all by themselves, the resulting parses will
 /// be random planar graphs; i.e. will be equivalent to the `any`
 /// language parses.
-Exp* make_any_exprs(Dictionary dict, int arity)
+Exp* make_any_exprs(Dictionary dict)
 {
-	if (arity <= 0) return nullptr;
-
 	// Create a pair of ANY-links that can connect either left or right.
-	Exp* aneg = make_connector_node(dict, dict->Exp_pool, "ANY", '-', false);
-	Exp* apos = make_connector_node(dict, dict->Exp_pool, "ANY", '+', false);
+	Exp* aneg = make_connector_node(dict, dict->Exp_pool, "ANY", '-', true);
+	Exp* apos = make_connector_node(dict, dict->Exp_pool, "ANY", '+', true);
 
 	Local* local = (Local*) (dict->as_server);
 	aneg->cost = local->any_default;
@@ -218,20 +177,7 @@ Exp* make_any_exprs(Dictionary dict, int arity)
 	Exp* any = make_or_node(dict->Exp_pool, aneg, apos);
 	Exp* optex = make_optional_node(dict->Exp_pool, any);
 
-	Exp* andhead = nullptr;
-	Exp* andtail = nullptr;
-
-	andhead = make_and_node(dict->Exp_pool, optex, NULL);
-	andtail = andhead->operand_first;
-
-	for (int i=1; i< arity; i++)
-	{
-		Exp* opt = make_optional_node(dict->Exp_pool, any);
-		andtail->operand_next = opt;
-		andtail = opt;
-	}
-
-	return andhead;
+	return optex;
 }
 
 #endif // HAVE_ATOMESE
