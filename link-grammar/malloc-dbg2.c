@@ -34,6 +34,7 @@ extern void * my_realloc_hook(void *, size_t, const char *, int, const char *);
 extern void * my_malloc_hook(size_t, const char *, int, const char *);
 extern void my_free_hook(void *, const char *, int, const char *);
 extern char * my_strdup_hook(const char *, const char *, int, const char *);
+extern void my_reset_hook(void);
 void my_init_hook(void);
 /* ======================================================== */
 
@@ -229,7 +230,13 @@ void my_free_hook(void * mem,
 	mtx_unlock(&mutx);
 }
 
-// void my_init_hook(void);
+void my_reset_hook(void)
+{
+	mtx_lock(&mutx);
+	printf("reset malloc trace hook\n");
+	nusers = 0;
+	mtx_unlock(&mutx);
+}
 
 __attribute__((constructor))
 void my_init_hook(void)

@@ -138,6 +138,9 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	// clobber tracer
+	// my_reset_hook();
+
 	const int n_threads = 10;
 	const int niter = 50000;
 	Parse_Options opts[n_threads];

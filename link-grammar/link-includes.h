@@ -447,6 +447,7 @@ link_public_api(void *) my_realloc_hook(void *, size_t, const char *, int, const
 link_public_api(void *) my_malloc_hook(size_t, const char *, int, const char *);
 link_public_api(void) my_free_hook(void *, const char *, int, const char *);
 link_public_api(char*) my_strdup_hook(const char *, const char *, int, const char *);
+link_public_api(void) my_reset_hook(void);
 
 #ifndef SWIG
 LINK_END_DECLS

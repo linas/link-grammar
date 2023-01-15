@@ -134,6 +134,9 @@ Dictionary dictionary_create_lang(const char * lang)
 		dictionary = dictionary_create_from_file(lang);
 	}
 
+// Clobber mem tracing
+my_reset_hook();
+
 	return dictionary;
 }
 
