@@ -144,10 +144,12 @@ static void report(void)
 		subsz += lusers[i].sz;
 		if (0 < lusers[i].sz) abssz += lusers[i].sz;
 	}
+	printf("Summary %s use=%ld   runttot=%Ld abstot=%Ld\n\n", prev, subsz,
+		(long long int)totsz, (long long int)abssz);
 
 	__int128_t avg = abssz;
 	avg /= mcnt;
-	fprintf (fh, "Total Size=%Ld abstot=%Ld out of %lu tot mallocs avg=%Ld\n",
+	fprintf (fh, "Total Size=%Ld abstot=%Ld out of %lu tot mallocs avg=%Ld\n\n",
 		(long long int)totsz, (long long int)abssz, mcnt,
 		(long long int)avg);
 }
