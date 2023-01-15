@@ -32,6 +32,7 @@
 #define malloc(X) my_malloc_hook(X, __FILE__, __LINE__, __FUNCTION__)
 #define realloc(X,N) my_realloc_hook(X, N, __FILE__, __LINE__, __FUNCTION__)
 #define free(X) my_free_hook(X, __FILE__, __LINE__, __FUNCTION__)
+#define strdup(X) my_strdup_hook(X, __FILE__, __LINE__, __FUNCTION__)
 
 
 #ifdef HAVE_ALLOCA_H
