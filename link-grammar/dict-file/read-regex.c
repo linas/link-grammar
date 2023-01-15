@@ -10,12 +10,12 @@
 
 #include <string.h>
 
-#include "link-includes.h"
 #include "dict-common/dict-common.h"
 #include "dict-common/file-utils.h"
 #include "error.h"
 #include "utilities.h"
 #include "read-regex.h"
+#include "link-includes.h"
 
 #define D_REGEX 10 /* Verbosity level for this file */
 

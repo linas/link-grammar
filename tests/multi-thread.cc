@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 	}
 
 	const int n_threads = 10;
-	const int niter = 500;
+	const int niter = 50000;
 	Parse_Options opts[n_threads];
 
 	printf("Creating %d threads, each parsing %d sentences\n",

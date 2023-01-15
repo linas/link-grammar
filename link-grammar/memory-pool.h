@@ -14,9 +14,9 @@
 
 #include <stddef.h>                     // max_align_t
 
-#include "link-includes.h"
 #include "error.h"
 #include "utilities.h"                  // GNUC_MALLOC (XXX separate include?)
+#include "link-includes.h"
 
 #ifndef D_MEMPOOL                       // Allow redefining for debug.
 #define D_MEMPOOL (D_SPEC+4)

@@ -351,7 +351,7 @@ void upcase_utf8_str(char *to, const char * from, size_t usize, locale_t locale)
 
 #ifdef NO_ALIGNED_MALLOC
 #if __GNUC__
-#warning No aligned alloc found (using malloc() instead).
+// #warning No aligned alloc found (using malloc() instead).
 #endif
 #endif /* NO_ALIGNED_MALLOC */
 

@@ -14,7 +14,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "dict-common/dict-api.h"       // cost_stringify
 #include "dict-common/dialect.h"
 #include "dict-common/dict-common.h"
 #include "dict-common/file-utils.h"
@@ -22,6 +21,7 @@
 #include "error.h"
 #include "read-dialect.h"
 #include "string-id.h"
+#include "dict-common/dict-api.h"       // cost_stringify
 
 #define SECTIONS_INIT_SZ 10
 #define DIALECT_TABLE_INIT_SZ (SECTIONS_INIT_SZ * 10)

@@ -18,7 +18,6 @@
 #include <threads.h>
 #endif /* HAVE_THREADS_H */
 
-#include "link-includes.h"
 #include "api-structures.h"
 #include "connectors.h"
 #include "count.h"
@@ -28,6 +27,7 @@
 #include "resources.h"
 #include "tokenize/word-structures.h"   // for Word_struct
 #include "utilities.h"
+#include "link-includes.h"
 
 /* This file contains the exhaustive search algorithm. */
 

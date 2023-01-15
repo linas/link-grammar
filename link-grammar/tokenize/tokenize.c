@@ -17,7 +17,6 @@
 #endif
 #include <limits.h>
 
-#include "anysplit.h"
 #include "api-structures.h"
 #include "dict-common/dict-affix.h"
 #include "dict-common/dict-api.h"
@@ -36,6 +35,7 @@
 #include "utilities.h"
 #include "wordgraph.h"
 #include "word-structures.h"
+#include "anysplit.h"
 
 #define MAX_STRIP 10
 #define MAX_STRIP_ALT 5

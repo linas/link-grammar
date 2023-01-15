@@ -147,6 +147,7 @@ liblink_grammar_la_SOURCES =        \
 	tokenize/wordgraph.c             \
 	tracon-set.c                     \
 	utilities.c                      \
+	malloc-dbg2.c                    \
 	                                 \
 	api-structures.h                 \
 	api-types.h                      \

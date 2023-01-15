@@ -16,8 +16,8 @@
 #include <stdint.h>
 
 #include "api-types.h"
-#include "dict-structures.h"            // cost_eq
 #include "string-id.h"
+#include "dict-structures.h"            // cost_eq
 
 /* dialect_tag costs with a special meaning. See also link-includes.h. */
 #define DIALECT_COST_MAX         9999.0F    /* Less than that is a real cost */

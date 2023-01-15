@@ -29,6 +29,10 @@
 #endif /* HAVE_LOCALE_T_IN_XLOCALE_H */
 
 #include "link-includes.h"
+#define malloc(X) my_malloc_hook(X, __FILE__, __LINE__, __FUNCTION__)
+#define realloc(X,N) my_realloc_hook(X, N, __FILE__, __LINE__, __FUNCTION__)
+#define free(X) my_free_hook(X, __FILE__, __LINE__, __FUNCTION__)
+
 
 #ifdef HAVE_ALLOCA_H
 # include <alloca.h>
@@ -176,16 +180,16 @@ typedef void *locale_t;
 #define freelocale(l)
 #endif /* HAVE_LOCALE_T */
 
-#if HAVE__ALIGNED_MALLOC
+#if XHAVE__ALIGNED_MALLOC
 #define aligned_alloc(alignment, size) _aligned_malloc (size, alignment)
 #define aligned_free(p) _aligned_free(p)
 #undef HAVE_POSIX_MEMALIGN
 
-#elif HAVE_ALIGNED_ALLOC
+#elif XHAVE_ALIGNED_ALLOC
 #define aligned_free(p) free(p)
 #undef HAVE_POSIX_MEMALIGN
 
-#elif HAVE_POSIX_MEMALIGN
+#elif XHAVE_POSIX_MEMALIGN
 /* aligned_alloc() emulation will be defined in utilities.c. */
 void *aligned_alloc(size_t alignment, size_t size);
 #define aligned_free(p) free(p)
@@ -193,7 +197,7 @@ void *aligned_alloc(size_t alignment, size_t size);
 #else
 /* Fallback to just malloc(), as alignment is not critical here. */
 #define NO_ALIGNED_MALLOC /* For generating a warning in utilities.c. */
-#define aligned_alloc(alignment, size) malloc(size)
+#define xaligned_alloc(alignment, size) my_malloc_hook(size, __FILE__, __LINE__, __FUNCTION__)
 #define aligned_free(p) free(p)
 #endif /* HAVE__ALIGNED_MALLOC */
 

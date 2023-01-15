@@ -8,9 +8,9 @@
 #ifdef HAVE_ATOMESE
 
 extern "C" {
-#include "../link-includes.h"            // For Dictionary
 #include "../dict-common/dict-common.h"  // for Dictionary_s
 #include "lookup-atomese.h"
+#include "../link-includes.h"            // For Dictionary
 };
 
 #include "local-as.h"

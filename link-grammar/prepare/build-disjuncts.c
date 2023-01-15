@@ -13,12 +13,12 @@
 
 /* stuff for transforming a dictionary entry into a disjunct list */
 
-#include "build-disjuncts.h"
 #include "connectors.h"
 #include "dict-common/dict-structures.h"  // Exp_struct, exp_stringify
 #include "dict-common/dict-common.h"      // Dictionary
 #include "disjunct-utils.h"
 #include "utilities.h"
+#include "build-disjuncts.h"
 
 /* Temporary connectors used while converting expressions into disjunct lists */
 typedef struct Tconnector_struct Tconnector;

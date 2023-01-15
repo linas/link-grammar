@@ -443,8 +443,13 @@ link_public_api(int)
  #define MS_DEPRECATED
 #endif
 
+link_public_api(void *) my_realloc_hook(void *, size_t, const char *, int, const char *);
+link_public_api(void *) my_malloc_hook(size_t, const char *, int, const char *);
+link_public_api(void) my_free_hook(void *, const char *, int, const char *);
+
 #ifndef SWIG
 LINK_END_DECLS
 #endif /* !SWIG */
+
 
 #endif

@@ -13,9 +13,9 @@
 #ifndef _LINK_GRAMMAR_ERROR_H_
 #define _LINK_GRAMMAR_ERROR_H_
 
-#include "link-includes.h"
 #include "externs.h"                    // verbosity
 #include "utilities.h"                  // GNUC_NORETURN, STRINGIFY
+#include "link-includes.h"
 
 /* User verbosity levels are 1-4, to be used for user info/debug.
  * For now hard-coded numbers are still used instead of D_USER_BASIC/TIMES. */

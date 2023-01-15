@@ -16,11 +16,11 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "analyze-linkage.h"
 #include "connectors.h"                 // connector_string
 #include "dict-common/dict-common.h"    // MAX_TOKEN_LENGTH
 #include "linkage.h"
 #include "string-set.h"
+#include "analyze-linkage.h"
 
 /**
  * This returns a string that is the GCD of the two given strings.

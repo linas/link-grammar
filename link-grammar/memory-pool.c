@@ -177,7 +177,7 @@ void *pool_alloc_vec(Pool_desc *mp, size_t vecsize)
 		if (NULL == mp->ring)
 		{
 			/* Allocate a new block and chain it. */
-			mp->ring = aligned_alloc(mp->alignment, mp->block_size);
+			mp->ring = xaligned_alloc(mp->alignment, mp->block_size);
 
 			/* aligned_alloc() has strict requirements. */
 			assert(NULL != mp->ring, "Aligned_alloc(%zu, %zu): %s",
