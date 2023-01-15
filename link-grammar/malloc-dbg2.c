@@ -30,6 +30,9 @@ void my_strdup_hook(const char *, const char *, int, const char *);
 #include <malloc.h>
 #include <threads.h>
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 extern void * my_realloc_hook(void *, size_t, const char *, int, const char *);
 extern void * my_malloc_hook(size_t, const char *, int, const char *);
 extern void my_free_hook(void *, const char *, int, const char *);
@@ -147,11 +150,22 @@ static void report(void)
 	printf("Summary %s use=%ld   runttot=%Ld abstot=%Ld\n\n", prev, subsz,
 		(long long int)totsz, (long long int)abssz);
 
+	static int rptnum = 0;
+	rptnum++;
+
+	struct rusage rus;
+	getrusage(RUSAGE_SELF, &rus);
+
 	__int128_t avg = abssz;
 	avg /= mcnt;
-	fprintf (fh, "Total Size=%Ld abstot=%Ld out of %lu tot mallocs avg=%Ld\n\n",
+
+	totsz /= 1024;
+	abssz /= 1024*1024;
+
+	fprintf (fh, "%d Use= %Ld KB; Tot= %Ld MB in %lu mlocs; avg= %Ld Bytes; RSS= %ld KB\n\n",
+		rptnum,
 		(long long int)totsz, (long long int)abssz, mcnt,
-		(long long int)avg);
+		(long long int)avg, rus.ru_maxrss);
 }
 
 void * my_realloc_hook(void * mem, size_t n_bytes,
