@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
 	// my_reset_hook();
 
 	const int n_threads = 10;
-	const int niter = 50000;
+	// const int niter = 50000;
+	const int niter = 5000;
 	Parse_Options opts[n_threads];
 
 	printf("Creating %d threads, each parsing %d sentences\n",

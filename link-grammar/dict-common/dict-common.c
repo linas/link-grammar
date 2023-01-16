@@ -322,10 +322,13 @@ static void affix_list_delete(Dictionary dict)
 	dict->afdict_class = NULL;
 }
 
+void hist_dump(void);
+
 void dictionary_delete(Dictionary dict)
 {
 	if (!dict) return;
 
+hist_dump();
 	if (verbosity >= D_USER_INFO) {
 		prt_error("Info: Freeing dictionary %s\n", dict->name);
 	}
