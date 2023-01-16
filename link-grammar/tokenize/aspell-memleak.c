@@ -1,9 +1,12 @@
 
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <aspell.h>
 
+// Compile with
+// cc aspell-memleak.c -laspell
 
 int main()
 {
@@ -19,12 +22,13 @@ int main()
 	spell_err = new_aspell_speller(config);
 	speller = to_aspell_speller(spell_err);
 
-	char* word = "asdfasdfsadf";
+	size_t k=0;
+	char* word = "asdf";
 	for (int l=0; l<1000000; l++)
 	{
-		/* this can return -1 on failure */
-		int badword = aspell_speller_check(speller, word, -1);
-printf("duude badword=%d\n", badword);
+		/* Returns 1 is the word is in dict. */
+		int found = aspell_speller_check(speller, word, -1);
+		// printf("duude badword=%d\n", found);
 		const AspellWordList *list = NULL;
 		AspellStringEnumeration *elem = NULL;
 		const char *aword = NULL;
@@ -35,9 +39,16 @@ printf("duude badword=%d\n", badword);
 
 		while ((aword = aspell_string_enumeration_next(elem)) != NULL)
 		{
-			printf("got %s\n", aword);
+			// printf("Spell suggesion: %s\n", aword);
+			k++;
 		}
 		delete_aspell_string_enumeration(elem);
+
+		if (0 == l%20000)
+		{
+			printf("Loop count=%d spell suggests=%lu\n", l, k);
+			malloc_stats();
+		}
 	}
 
 	delete_aspell_speller(speller);
