@@ -1,3 +1,16 @@
+//
+// Demo program showing a bad aspell memleak.
+// This will leak a Gigabyte of RSS every few minutes.
+//
+// See https://github.com/opencog/link-grammar/discussions/1373
+// for details.
+//
+// Compile with
+// cc -o aspell-memleak aspell-memleak.c -laspell
+// Run as ./aspell-memleak
+//
+// ------
+// Linas Vepstas 16 January 2023
 
 #include <malloc.h>
 #include <stdio.h>
@@ -5,13 +18,9 @@
 #include <string.h>
 #include <aspell.h>
 
-// Compile with
-// cc aspell-memleak.c -laspell
-
 int main()
 {
 	AspellConfig *config = new_aspell_config();
-
 	aspell_config_replace(config, "lang", "en_US");
 
 	AspellCanHaveError *spell_err = new_aspell_speller(config);
@@ -21,7 +30,7 @@ int main()
 	char* word = "asdf";
 	for (int l=0; l<1000000; l++)
 	{
-		/* Returns 1 is the word is in dict. */
+		/* Returns 1 if the word is in dict. */
 		int found = aspell_speller_check(speller, word, -1);
 		// printf("Found the word: %d\n", found);
 
