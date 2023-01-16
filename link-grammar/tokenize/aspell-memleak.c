@@ -10,17 +10,12 @@
 
 int main()
 {
+	AspellConfig *config = new_aspell_config();
 
-	AspellConfig *config;
-	AspellSpeller *speller;
-
-	AspellCanHaveError *spell_err = NULL;
-
-	config = new_aspell_config();
 	aspell_config_replace(config, "lang", "en_US");
 
-	spell_err = new_aspell_speller(config);
-	speller = to_aspell_speller(spell_err);
+	AspellCanHaveError *spell_err = new_aspell_speller(config);
+	AspellSpeller *speller = to_aspell_speller(spell_err);
 
 	size_t k=0;
 	char* word = "asdf";
@@ -28,15 +23,13 @@ int main()
 	{
 		/* Returns 1 is the word is in dict. */
 		int found = aspell_speller_check(speller, word, -1);
-		// printf("duude badword=%d\n", found);
-		const AspellWordList *list = NULL;
-		AspellStringEnumeration *elem = NULL;
-		const char *aword = NULL;
-		unsigned int size;
-		list = aspell_speller_suggest(speller, word, -1);
-		elem = aspell_word_list_elements(list);
-		size = aspell_word_list_size(list);
+		// printf("Found the word: %d\n", found);
 
+		const AspellWordList *list = aspell_speller_suggest(speller, word, -1);
+		AspellStringEnumeration *elem = aspell_word_list_elements(list);
+		unsigned int size = aspell_word_list_size(list);
+
+		const char *aword = NULL;
 		while ((aword = aspell_string_enumeration_next(elem)) != NULL)
 		{
 			// printf("Spell suggesion: %s\n", aword);
@@ -46,7 +39,7 @@ int main()
 
 		if (0 == l%20000)
 		{
-			printf("Loop count=%d spell suggests=%lu\n", l, k);
+			printf("Loop count= %d spell suggests= %lu\n", l, k);
 			malloc_stats();
 		}
 	}
