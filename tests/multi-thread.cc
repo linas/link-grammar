@@ -133,6 +133,7 @@ int k=0;
 			char *line = &junk[ln*WID];
 			parse_one_sent(dict, opts, line);
 		}
+
 k++;
 if (0 == k%100) malloc_stats();
 	}
@@ -162,6 +163,7 @@ int main(int argc, char* argv[])
 	{
 		Dictionary dict = dicte;
 		opts[i] = parse_options_create();
+		parse_options_set_spell_guess(opts[i], 0);
 		if (0 == i%2)
 		{
 			dict = dictr; // Russian
