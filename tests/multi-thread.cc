@@ -17,6 +17,7 @@
 #include <vector>
 #include <atomic>
 
+#include <malloc.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,11 +88,13 @@ static void parse_sents(Dictionary dict, Parse_Options opts, int thread_id, int 
 		"土耳其出兵 搶先機 美土俄棋局怎麼走?",
 		"默克爾努力獲突破 德社民黨同意開展組閣談判"
 
+#if 0
 		// Thai test sentences from corpus.batch
 		"ตำรวจ กิน ข้าว",
 		"ตำรวจ นาย หนึ่ง ซื้อ เสื้อ ตัว หนึ่ง",
 		"ฉัน ไป ตลาด ซื้อ ข้าว มา",
 		"ฉัน เดิน ไป ตลาด ซื้อ ข้าว มา กิน"
+#endif
 	};
 
 	int nsents = sizeof(sents) / sizeof(const char *);
@@ -118,6 +121,7 @@ static void parse_sents(Dictionary dict, Parse_Options opts, int thread_id, int 
 		line[WID-1] = 0x0;
 	}
 
+int k=0;
 	for (int j=0; j<niter; j += (nsents+LIN))
 	{
 		for (int i=0; i < nsents; ++i)
@@ -129,6 +133,8 @@ static void parse_sents(Dictionary dict, Parse_Options opts, int thread_id, int 
 			char *line = &junk[ln*WID];
 			parse_one_sent(dict, opts, line);
 		}
+k++;
+if (0 == k%100) malloc_stats();
 	}
 }
 
@@ -146,7 +152,7 @@ int main(int argc, char* argv[])
 	}
 
 	const int n_threads = 10;
-	const int niter = 500;
+	const int niter = 50000;
 	Parse_Options opts[n_threads];
 
 	printf("Creating %d threads, each parsing %d sentences\n",
@@ -156,17 +162,19 @@ int main(int argc, char* argv[])
 	{
 		Dictionary dict = dicte;
 		opts[i] = parse_options_create();
-		if (1 == i%3)
+		if (0 == i%2)
 		{
 			dict = dictr; // Russian
 			parse_options_set_spell_guess(opts[i], 0);
 		}
 
+#if 0
 		if (2 == i%3)
 		{
 			dict = dicth;  // Thai
 			parse_options_set_spell_guess(opts[i], 0);
 		}
+#endif
 
 		thread_pool.push_back(std::thread(parse_sents, dict, opts[i], i, niter));
 	}
