@@ -101,7 +101,7 @@ void * spellcheck_create(const char * lang)
 }
 
 /**
- * Free memory structures used wiith spell-checker 'chk'
+ * Free memory structures used with spell-checker 'chk'
  */
 void spellcheck_destroy(void * chk)
 {
