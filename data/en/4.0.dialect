@@ -49,6 +49,7 @@
 no-headline
 bad-spelling: 0
 colloquial: 0
+dial: 0.45
 
 [no-headline]
 headline: 4
@@ -59,6 +60,8 @@ headline: 0
 [no-bad-spelling]
 bad-spelling: 4
 
+[dial]
+dial: 0.33
 % Examples.
 %[irish1]  %this is a test
 %irish_a: 0.2 % test 1

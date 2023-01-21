@@ -17,6 +17,9 @@
 #define max-disjunct-cost         2.7;
 #define panic-max-disjunct-cost   4.0;
 
+foo: D- & W- & {[S+]dial};
+fou: D- & W- & {[S+]};
+
  % _ORGANIZATION OF THE DICTIONARY_
  %
  % I. NOUNS
