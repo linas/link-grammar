@@ -29,11 +29,13 @@ dict_reopen_SOURCES = dict-reopen.cc
 multi_dict_SOURCES = multi-dict.cc
 multi_thread_SOURCES = multi-thread.cc
 mem_leak_SOURCES = mem-leak.cc
+multi_corpus_SOURCES = multi-corpus.cc
 
 LDADD = -L$(top_builddir)/link-grammar/ -llink-grammar
 
 multi_dict_LDADD = $(LDADD)
 multi_thread_LDADD = $(LDADD)
+multi_corpus_LDADD = $(LDADD)
 
 if WITH_SAT_SOLVER
 if LIBMINISAT_BUNDLED
