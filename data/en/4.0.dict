@@ -19,6 +19,7 @@
 
 foo: D- & W- & {[S+]dial};
 fou: D- & W- & {[S+]};
+fow: D- & W- & [{S+}]dial;
 
  % _ORGANIZATION OF THE DICTIONARY_
  %
