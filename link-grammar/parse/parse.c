@@ -326,9 +326,6 @@ static int linkage_equiv_p(Linkage lpv, Linkage lnx)
 			              lnx->chosen_disjuncts[wi]->word_string);
 	}
 
-	// Since the above performed a stable compare, we can safely mark
-	// the second linkage as a duplicate of the first.
-	lnx->dupe = true;
 	return 0;
 }
 
@@ -369,20 +366,25 @@ int VDAL_compare_linkages(Linkage l1, Linkage l2)
  * selected. When the alloc array is slightly less than the number of
  * linkages found, then as many as half(!) of the linkages can be
  * duplicates.
- *
- * This assumes that the duplicates have already been detected and
- * marked by setting `linkage->dupe=true` during linkage sorting.
  */
-static void deduplicate_linkages(Sentence sent, int linkage_limit)
+static void deduplicate_linkages(Sentence sent, Parse_Options opts)
 {
 	/* No need for deduplication, if random selection wasn't done. */
-	if (!sent->overflowed && (sent->num_linkages_found <= linkage_limit))
+	if (!sent->overflowed &&
+		(sent->num_linkages_found <= (int) opts->linkage_limit))
 		return;
 
 	uint32_t nl = sent->num_linkages_alloced;
 	if (2 > nl) return;
 
-	// Sweep away duplicates
+	// Phase 1: Mark
+	for (uint32_t i=1; i<nl; i++)
+	{
+		sent->lnkages[i].dupe =
+			(0 == opts->cost_model.compare_fn(&sent->lnkages[i-1], &sent->lnkages[i]));
+	}
+
+	// Phase 2: Sweep
 	uint32_t tgt = 0;
 	uint32_t blkstart = 0;
 	uint32_t blklen = 1; // Initial block, already skipped
@@ -433,15 +435,11 @@ static void sort_linkages(Sentence sent, Parse_Options opts)
 	/* It they're randomized, don't bother sorting */
 	if (0 != sent->rand_state && sent->dict->shuffle_linkages) return;
 
-	/* Initialize all linkages as unique */
-	for (uint32_t i=0; i<sent->num_linkages_alloced; i++)
-		sent->lnkages[i].dupe = false;
-
 	qsort((void *)sent->lnkages, sent->num_linkages_alloced,
 	      sizeof(struct Linkage_s),
 	      (int (*)(const void *, const void *))opts->cost_model.compare_fn);
 
-	deduplicate_linkages(sent, opts->linkage_limit);
+	deduplicate_linkages(sent, opts);
 	print_time(opts, "Sorted all linkages");
 }
 
