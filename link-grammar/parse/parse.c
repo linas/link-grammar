@@ -382,6 +382,9 @@ static void deduplicate_linkages(Sentence sent, Parse_Options opts)
 	{
 		sent->lnkages[i].dupe =
 			(0 == opts->cost_model.compare_fn(&sent->lnkages[i-1], &sent->lnkages[i]));
+if (sent->lnkages[i].dupe)
+printf("duuude effin a at %u %f %f vio=%d\n", i, sent->lnkages[i-1].lifo.disjunct_cost,
+sent->lnkages[i].lifo.disjunct_cost, sent->lnkages[i-1].lifo.N_violations);
 	}
 
 	// Phase 2: Sweep
@@ -396,12 +399,15 @@ static void deduplicate_linkages(Sentence sent, Parse_Options opts)
 		free_linkage(lnx);
 		num_dupes ++;
 
+printf("duuude dupe at %u nup=%u tgt=%u blkstart=%u len=%u\n", i, num_dupes, tgt,
+blkstart, blklen);
 		// If there's a block of good linkages to copy, then copy.
 		if (0 < blklen)
 		{
 			// Skip initial block; it is already in place.
 			if (0 < tgt)
 			{
+printf("duuude move to %u from %u len=%u\n", tgt, blkstart, blklen);
 				Linkage ltgt = &sent->lnkages[tgt];
 				Linkage lsrc = &sent->lnkages[blkstart];
 				memmove(ltgt, lsrc, blklen * sizeof(struct Linkage_s));
@@ -417,15 +423,27 @@ static void deduplicate_linkages(Sentence sent, Parse_Options opts)
 	// Copy the final block.
 	if (0 < blklen && 0 < tgt)
 	{
+printf("duuude finallll move to %u from %u len=%u\n", tgt, blkstart, blklen);
 		Linkage ltgt = &sent->lnkages[tgt];
 		Linkage lsrc = &sent->lnkages[blkstart];
 		memmove(ltgt, lsrc, blklen * sizeof(struct Linkage_s));
 	}
 
+printf("duuuude at first= %u %lu %lu %lu\n",
+num_dupes,
+sent->num_linkages_alloced ,
+sent->num_valid_linkages ,
+sent->num_linkages_post_processed );
 	// Adjust the totals.
 	sent->num_linkages_alloced -= num_dupes;
 	sent->num_valid_linkages -= num_dupes;
 	sent->num_linkages_post_processed -= num_dupes;
+printf("duuuude at last ndup= %u %lu %lu %lu\n",
+num_dupes,
+sent->num_linkages_alloced ,
+sent->num_valid_linkages ,
+sent->num_linkages_post_processed );
+
 }
 
 static void sort_linkages(Sentence sent, Parse_Options opts)
