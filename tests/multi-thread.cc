@@ -163,8 +163,14 @@ int main(int argc, char* argv[])
 	{
 		Dictionary dict = dicte;
 		opts[i] = parse_options_create();
-		parse_options_set_spell_guess(opts[i], 0);
-		if (0 == i%2)
+		if (0 == i%3)
+		{
+			dict = dicte; // English
+			// FYI, Aspell leaks memory. But we test anyway. #1373
+			parse_options_set_spell_guess(opts[i], 7);
+			parse_options_set_spell_guess(opts[i], 0);
+		}
+		if (1 == i%3)
 		{
 			dict = dictr; // Russian
 			parse_options_set_spell_guess(opts[i], 0);

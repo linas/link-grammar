@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "dict-common/dict-common.h"
+#include "dict-common/dict-internals.h"
 #include "dict-common/dict-utils.h"     // patch_subscript
 #include "dict-common/idiom.h"
 #include "dict-file/read-dict.h"        // dict_error2
@@ -38,10 +39,6 @@ void free_dictionary_root(Dictionary dict)
 	pool_delete(dict->Exp_pool);
 	dict->root = NULL;
 	dict->Exp_pool = NULL;
-}
-
-void dict_node_noop(Dictionary dict)
-{
 }
 
 /* ======================================================================== */
@@ -169,71 +166,8 @@ static inline int dict_order_wild(const char * s, const Dict_node * dn)
 }
 #undef D_DOW
 
-Dict_node * dict_node_new(void)
-{
-	return (Dict_node*) malloc(sizeof(Dict_node));
-}
-
 /* ======================================================================== */
-#if 0
-/**
- * dict_match --  return true if strings match, else false.
- * A "bare" string (one without a subscript) will match any corresponding
- * string with a subscript; so, for example, "make" and "make.n" are
- * a match.  If both strings have subscripts, then the subscripts must match.
- *
- * A subscript is the part that follows the SUBSCRIPT_MARK.
- */
-static bool dict_match(const char * s, const char * t)
-{
-	while ((*s == *t) && (*s != '\0')) { s++; t++; }
 
-	if (*s == *t) return true; /* both are '\0' */
-	if ((*s == 0) && (*t == SUBSCRIPT_MARK)) return true;
-	if ((*s == SUBSCRIPT_MARK) && (*t == 0)) return true;
-
-	return false;
-}
-
-/**
- * prune_lookup_list -- discard all list entries that don't match string
- * Walk the lookup list (of right links), discarding all nodes that do
- * not match the dictionary string s. The matching is dictionary matching:
- * subscripted entries will match "bare" entries.
- */
-static Dict_node * prune_lookup_list(Dict_node * restrict llist, const char * restrict s)
-{
-	Dict_node *dn, *dnx, *list_new;
-
-	list_new = NULL;
-	for (dn = llist; dn != NULL; dn = dnx)
-	{
-		dnx = dn->right;
-		/* now put dn onto the answer list, or free it */
-		if (dict_match(dn->string, s))
-		{
-			dn->right = list_new;
-			list_new = dn;
-		}
-		else
-		{
-			free(dn);
-		}
-	}
-
-	/* now reverse the list back */
-	llist = NULL;
-	for (dn = list_new; dn != NULL; dn = dnx)
-	{
-		dnx = dn->right;
-		dn->right = llist;
-		llist = dn;
-	}
-	return llist;
-}
-#endif
-
-/* ======================================================================== */
 static bool subscr_match(const char *s, const Dict_node * dn)
 {
 	const char * s_sub = get_word_subscript(s);
@@ -263,29 +197,42 @@ rdictionary_lookup(Dict_node * restrict llist,
                    bool boolean_lookup,
                    int (*dict_order)(const char *, const Dict_node *))
 {
-	int m;
-	Dict_node * dn_new;
 	if (dn == NULL) return llist;
 
-	m = dict_order(s, dn);
+	int m = dict_order(s, dn);
 
-	if (m >= 0)
+	// The tree is in alphabetical order. Move down either the
+	// left or right branch, until a string match is found.
+	while (m != 0)
 	{
-		llist = rdictionary_lookup(llist, dn->right, s, boolean_lookup, dict_order);
+		if (m > 0)
+			dn = dn->right;
+		else if (m < 0)
+			dn = dn->left;
+
+		if (dn == NULL) return llist;
+
+		m = dict_order(s, dn);
 	}
-	if ((m == 0) && (dict_order != dict_order_wild || subscr_match(s, dn)))
+
+	// There might be more than one perfect match. Recurse to get it.
+	if (dn->right)
+		llist = rdictionary_lookup(llist, dn->right, s, boolean_lookup, dict_order);
+
+	if (dict_order != dict_order_wild || subscr_match(s, dn))
 	{
 		if (boolean_lookup) return dn;
-		dn_new = dict_node_new();
+		Dict_node * dn_new = dict_node_new();
 		*dn_new = *dn;
 		dn_new->right = llist;
 		dn_new->left = dn; /* Currently only used for inserting idioms */
 		llist = dn_new;
 	}
-	if (m <= 0)
-	{
+
+	// There might be more than one perfect match. Recurse to get it.
+	if (dn->left)
 		llist = rdictionary_lookup(llist, dn->left, s, boolean_lookup, dict_order);
-	}
+
 	return llist;
 }
 
@@ -309,20 +256,22 @@ bool dict_node_exists_lookup(Dictionary dict, const char *s)
 	return !!rdictionary_lookup(NULL, dict->root, s, true, dict_order_bare);
 }
 
-void dict_node_free_list(Dict_node *llist)
+/**
+ * strict_lookup_list() - return exact match in the dictionary
+ *
+ * Returns a pointer to a lookup list of the words in the dictionary.
+ *
+ * This list is made up of Dict_nodes, linked by their right pointers.
+ * The node, file and string fields are copied from the dictionary.
+ *
+ * The list normally has 0 or 1 elements, unless the given word
+ * appears more than once in the dictionary.
+ *
+ * The returned list must be freed with dict_node_free_lookup().
+ */
+Dict_node * strict_lookup_list(const Dictionary dict, const char *s)
 {
-	Dict_node * n;
-	while (llist != NULL)
-	{
-		n = llist->right;
-		free(llist);
-		llist = n;
-	}
-}
-
-void dict_node_free_lookup(Dictionary dict, Dict_node *llist)
-{
-	dict_node_free_list(llist);
+	return rdictionary_lookup(NULL, dict->root, s, false, dict_order_strict);
 }
 
 /**
@@ -345,43 +294,6 @@ Dict_node * dict_node_wild_lookup(Dictionary dict, const char *s)
 
 	result = rdictionary_lookup(NULL, dict->root, stmp, false, dict_order_wild);
 	return result;
-}
-
-#if 0
-/**
- * abridged_lookup_list() - return lookup list of words in the dictionary
- *
- * Returns a pointer to a lookup list of the words in the dictionary.
- * Excludes any idioms that contain the word; use
- * dictionary_lookup_list() to obtain the complete list.
- *
- * This list is made up of Dict_nodes, linked by their right pointers.
- * The node, file and string fields are copied from the dictionary.
- *
- * The returned list must be freed with dict_node_free_lookup().
- */
-static Dict_node * abridged_lookup_list(const Dictionary dict, const char *s)
-{
-	return rdictionary_lookup(NULL, dict->root, s, false, dict_order_bare);
-}
-#endif
-
-/**
- * strict_lookup_list() - return exact match in the dictionary
- *
- * Returns a pointer to a lookup list of the words in the dictionary.
- *
- * This list is made up of Dict_nodes, linked by their right pointers.
- * The node, file and string fields are copied from the dictionary.
- *
- * The list normally has 0 or 1 elements, unless the given word
- * appears more than once in the dictionary.
- *
- * The returned list must be freed with dict_node_free_lookup().
- */
-Dict_node * strict_lookup_list(const Dictionary dict, const char *s)
-{
-	return rdictionary_lookup(NULL, dict->root, s, false, dict_order_strict);
 }
 
 /* ======================================================================== */

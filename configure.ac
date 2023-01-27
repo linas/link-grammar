@@ -4,7 +4,7 @@
 # accordingly.
 # Don't end the URLs with a slash even if it appears in the official address,
 # because we may append a component. Also, they cannot include "!".
-AC_INIT([link-grammar],[5.12.0],[https://github.com/opencog/link-grammar],[],
+AC_INIT([link-grammar],[5.12.1],[https://github.com/opencog/link-grammar],[],
 		  [https://www.abisource.com/projects/link-grammar])
 
 # Check whether we want to set defaults for CFLAGS and CXXFLAGS
@@ -37,7 +37,7 @@ LINK_MINOR_VERSION=12
 dnl     3) Increment when interfaces not changed at all,
 dnl        only bug fixes or internal changes made.
 dnl     4b) Set to zero when adding, removing or changing interfaces.
-LINK_MICRO_VERSION=0
+LINK_MICRO_VERSION=1
 dnl
 dnl     Set this too
 MAJOR_VERSION_PLUS_MINOR_VERSION=`expr $LINK_MAJOR_VERSION + $LINK_MINOR_VERSION`
@@ -119,37 +119,27 @@ AC_CHECK_FUNCS(prctl)
 AC_DEFINE(__STDC_FORMAT_MACROS)
 AC_DEFINE(__STDC_LIMIT_MACROS)
 
-# Don't use thread functions with Emscripten.
-# Emscripten does not like threads.
-if test "$EMSCRIPTEN" != ''; then
-	AC_CHECK_DEFINE(__EMSCRIPTEN__, [emscripten=yes],
-						 [AC_MSG_ERROR([EMSCRIPTEN environment variable found, but emcc is not used])])
-fi
+# Check for a keyword for Thread Local Storage declaration.
+# If found - define TLS to it.
+lg_tls=no
+AX_TLS(,:)
+test "$ac_cv_tls" != "none" && lg_tls=yes
 
-if test "x$emscripten" != "xyes"; then
+AX_PTHREAD
+if test -n "$ax_pthread_ok"; then
+	CC="${PTHREAD_CC:-CC}"
+	dnl #CCX="${PTHREAD_CC:-CCX}"
 
-	# Check for a keyword for Thread Local Storage declaration.
-	# If found - define TLS to it.
-	lg_tls=no
-	AX_TLS(,:)
-	test "$ac_cv_tls" != "none" && lg_tls=yes
-
-	AX_PTHREAD
-	if test -n "$ax_pthread_ok"; then
-		CC="${PTHREAD_CC:-CC}"
-		dnl #CCX="${PTHREAD_CC:-CCX}"
-
-		dnl Currently, libtool uses --nostdlib when linking shared libraries,
-		dnl which causes the -pthread flag to be ignored. Try to work around that
-		dnl by explicitly specifying the pthread library unless it is already set.
-		if test -z "$PTHREAD_LIBS"; then
-			PTHREAD_LIBS=-lpthread
-		fi
+	dnl Currently, libtool uses --nostdlib when linking shared libraries,
+	dnl which causes the -pthread flag to be ignored. Try to work around that
+	dnl by explicitly specifying the pthread library unless it is already set.
+	if test -z "$PTHREAD_LIBS"; then
+		PTHREAD_LIBS=-lpthread
 	fi
-
-	dnl Check if we can use C11 threads functions
-	AC_CHECK_HEADERS_ONCE([threads.h])
 fi
+
+dnl Check if we can use C11 threads functions
+AC_CHECK_HEADERS_ONCE([threads.h])
 
 dnl If the visibility __attribute__  is supported, define HAVE_VISIBILITY
 dnl and a variable CFLAG_VISIBILITY, to be added to CFLAGS/CXXFLAGS.
@@ -530,7 +520,7 @@ HaveAtomese=no
 if test x"${AtomSpaceFound}" = xyes && test x"${NLPTypesFound}" = xyes; then
 	HaveAtomese=yes
 	AC_DEFINE(HAVE_ATOMESE, 1, [Define for compilation])
-	ATOMSPACE_LIBS="-latom_types -lnlp-types -lstorage-types -lsexpr -lpersist-flow -Wl,--no-as-needed -lpersist-rocks -lpersist-cog -lpersist-file -Wl,--as-needed -lpersist -latomspace -L/usr/local/lib/opencog/"
+	ATOMSPACE_LIBS="-latom_types -lnlp-types -lstorage-types -lsexpr -lpersist-flow -Wl,--no-as-needed -lpersist-rocks -lpersist-monospace -lpersist-cog -lpersist-cog-simple -lpersist-file -Wl,--as-needed -lpersist -latomspace -L/usr/local/lib/opencog/"
 fi
 AC_SUBST(ATOMSPACE_LIBS)
 
@@ -1152,10 +1142,19 @@ $PACKAGE-$VERSION  build configuration settings
 	AtomSpace-backed dictionary:    ${HaveAtomese}
 	Definitions:                    ${LG_DEFS}
 	Libraries:                      ${lglibs}
-])"
+"])
 # Show LDFLAGS if set (usually by environment of argument).
 if test -n "$LDFLAGS"; then
 	AS_ECHO(["	Loader flags:                   $LDFLAGS"])
 else
 	AS_ECHO([])
+fi
+
+if test "x${ASpellFound}" == "xyes"; then
+	AS_ECHO_N(["
+   ----------
+   Caution: Aspell version 0.60.8 and possibly others leak memory!
+   Do not enable spell-guessing in production servers!
+   ----------
+"])
 fi

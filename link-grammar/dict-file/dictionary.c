@@ -14,10 +14,12 @@
 #include "api-structures.h"
 #include "dict-common/dialect.h"      // dialect_alloc
 #include "dict-common/dict-affix.h"
+#include "dict-common/dict-affix-impl.h"
 #include "dict-common/dict-api.h"
 #include "dict-common/dict-common.h"
 #include "dict-common/dict-defines.h"
-#include "dict-common/dict-impl.h"
+#include "dict-common/dict-internals.h"
+#include "dict-common/dict-locale.h"
 #include "dict-common/dict-utils.h"
 #include "dict-common/file-utils.h"
 #include "dict-common/idiom.h"
@@ -36,6 +38,18 @@
 * Routines for manipulating Dictionary
 *
 ****************************************************************/
+
+/**
+ * If word has a connector, return it.
+ * If word has more than one connector, return NULL.
+ */
+static const char * word_only_connector(Dict_node * dn)
+{
+	Exp * e = dn->exp;
+	if (CONNECTOR_type == e->type)
+		return e->condesc->string;
+	return NULL;
+}
 
 static void load_affix(Dictionary afdict, Dict_node *dn, int l)
 {
@@ -173,6 +187,9 @@ dictionary_six_str(const char * lang,
 		dict->free_lookup = dict_node_free_lookup;
 		dict->exists_lookup = dict_node_exists_lookup;
 		dict->clear_cache = dict_node_noop;
+		dict->start_lookup = dict_lookup_noop;
+		dict->end_lookup = dict_lookup_noop;
+
 		dict->dialect_tag.set = string_id_create();
 		condesc_init(dict, 1<<13);
 		Exp_pool_size = 1<<13;

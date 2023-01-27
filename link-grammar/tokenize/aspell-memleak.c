@@ -48,6 +48,7 @@ int main()
 
 		if (0 == l%20000)
 		{
+			printf("\n");
 			printf("Loop count= %d spell suggests= %lu\n", l, k);
 			malloc_stats();
 		}

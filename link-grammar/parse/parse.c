@@ -11,6 +11,7 @@
 /*                                                                       */
 /*************************************************************************/
 #include <limits.h>
+
 #include "api-structures.h"
 #include "count.h"
 #include "dict-common/dict-common.h"   // For Dictionary_s
@@ -62,15 +63,15 @@ static void find_unused_disjuncts(Sentence sent, extractor_t *pex)
 	}
 }
 
-static bool setup_linkages(Sentence sent, extractor_t* pex,
+static void setup_linkages(Sentence sent, extractor_t* pex,
                           fast_matcher_t* mchxt,
                           count_context_t* ctxt,
                           Parse_Options opts)
 {
-	bool overflowed = build_parse_set(pex, sent, mchxt, ctxt, sent->null_count, opts);
+	sent->overflowed = build_parse_set(pex, sent, mchxt, ctxt, sent->null_count, opts);
 	print_time(opts, "Built parse set");
 
-	if (overflowed && (1 < opts->verbosity) && !IS_GENERATION(sent->dict))
+	if (sent->overflowed && (1 < opts->verbosity) && !IS_GENERATION(sent->dict))
 	{
 		err_ctxt ec = { sent };
 		err_msgc(&ec, lg_Warn, "Count overflow.\n"
@@ -84,7 +85,7 @@ static bool setup_linkages(Sentence sent, extractor_t* pex,
 		sent->num_linkages_post_processed = 0;
 		sent->num_valid_linkages = 0;
 		sent->lnkages = NULL;
-		return overflowed;
+		return;
 	}
 
 	sent->num_linkages_alloced =
@@ -96,8 +97,6 @@ static bool setup_linkages(Sentence sent, extractor_t* pex,
 	 * XXX free_linkages() zeros sent->num_linkages_found. */
 	if (sent->lnkages) free_linkages(sent);
 	sent->lnkages = linkage_array_new(sent->num_linkages_alloced);
-
-	return overflowed;
 }
 
 /**
@@ -164,14 +163,14 @@ static bool optional_word_exists(Sentence sent)
  * linkages.
  */
 static void process_linkages(Sentence sent, extractor_t* pex,
-                             bool overflowed, Parse_Options opts)
+                             Parse_Options opts)
 {
 	if (0 == sent->num_linkages_found) return;
 	if (0 == sent->num_linkages_alloced) return; /* Avoid a later crash. */
 
 	/* Pick random linkages if we get more than what was asked for. */
-	bool pick_randomly = overflowed ||
-	    (sent->num_linkages_found > (int) sent->num_linkages_alloced);
+	bool pick_randomly = sent->overflowed ||
+	    (sent->num_linkages_found > (int) opts->linkage_limit);
 
 	sent->num_valid_linkages = 0;
 	size_t N_invalid_morphism = 0;
@@ -280,6 +279,220 @@ static void process_linkages(Sentence sent, extractor_t* pex,
 	}
 }
 
+/**
+ * Linkage-equivalent predicate. Return zero if they are equivalent,
+ * else return +1 or -1. This does provide a stable sort; inequivalent
+ * linkages are always sorted the same way.
+ *
+ * This assumes that the more basic inequivalence compares have already
+ * been done. This only disambiguates the final little bit of
+ * nearly-identical linkages.
+ */
+static int linkage_equiv_p(Linkage lpv, Linkage lnx)
+{
+	// Compare link endpoints
+	for (uint32_t li=0; li<lpv->num_links; li++)
+	{
+		Link * plk = &lpv->link_array[li];
+		Link * nlk = &lnx->link_array[li];
+
+		// Compare word-endpoints first. Most differences are likely
+		// to be noticeable here. This is an inexpensive check.
+		int lwd = plk->lw - nlk->lw;
+		if (lwd) return lwd;
+
+		int rwd = plk->rw - nlk->rw;
+		if (rwd) return rwd;
+	}
+
+	// Compare link names. This is slightly more expensive than the
+	// check above, so we defer this check.
+	for (uint32_t li=0; li<lpv->num_links; li++)
+	{
+		Link * plk = &lpv->link_array[li];
+		Link * nlk = &lnx->link_array[li];
+
+		// String set guarantees that if the pointer differs,
+		// then the string does too.
+		if (plk->link_name != nlk->link_name)
+			return strcmp(plk->link_name, nlk->link_name);
+	}
+
+	// Compare words. The chosen_disjuncts->word_string is the
+	// dictionary word. It can happen that two different dictionary
+	// words can have the same disjunct, and thus result in the same
+	// linkage. For backwards compat, we will report these as being
+	// different, as printing will reveal the differences in words.
+	for (uint32_t wi=0; wi<lpv->num_words; wi++)
+	{
+		Disjunct * pdj = lpv->chosen_disjuncts[wi];
+		Disjunct * ndj = lnx->chosen_disjuncts[wi];
+
+		// Parses with non-zero null count will have null words,
+		// i.e. word without chosen_disjuncts. Avoid a null-pointer
+		// deref in this case.
+		if (NULL == pdj)
+		{
+			// If one is null, both should be null. (I think this
+			// will always be true, but I'm not sure.)
+			if (NULL == ndj) continue;
+			return 1;
+		}
+		if (pdj->word_string != ndj->word_string)
+			return strcmp(pdj->word_string, ndj->word_string);
+	}
+
+	// Compare connector types at the link endpoints. If we are here,
+	// then the link endpoints landed on the same words, and the link
+	// names were the same. The connector types might still differ,
+	// due to intersection. The multi-connector flag might differ.
+	// However, neither of these are likely. It is plausible to skip
+	// this check entirely, its mostly a CPU-time-waster that will
+	// never find any differences for the almost any situation.
+	for (uint32_t li=0; li<lpv->num_links; li++)
+	{
+		Link * plk = &lpv->link_array[li];
+		Link * nlk = &lnx->link_array[li];
+
+		if (plk->lc != nlk->lc)
+		{
+			int diff = strcmp(plk->lc->desc->string, nlk->lc->desc->string);
+			if (diff) return diff;
+			int md = plk->lc->multi - nlk->lc->multi;
+			if (md) return md;
+		}
+		if (plk->rc != nlk->rc)
+		{
+			int diff = strcmp(plk->rc->desc->string, nlk->rc->desc->string);
+			if (diff) return diff;
+			int md = plk->rc->multi - nlk->rc->multi;
+			if (md) return md;
+		}
+	}
+
+#if DOUBLE_CHECK
+	// We also expect the chosen disjuncts to be identical. But after
+	// the above checks, it should be impossible that they differ.
+	for (uint32_t wi=0; wi<lpv->num_words; wi++)
+	{
+		if (lpv->chosen_disjuncts[wi] != lnx->chosen_disjuncts[wi])
+			return strcmp(
+				linkage_get_disjunct_str(lpv, wi),
+				linkage_get_disjunct_str(lnx, wi));
+	}
+#endif
+
+	// Since the above performed a stable compare, we can safely mark
+	// the second linkage as a duplicate of the first.
+	lnx->dupe = true;
+	return 0;
+}
+
+/**
+ * VDAL == Compare by Violations, Disjunct, Link length.
+ */
+int VDAL_compare_linkages(Linkage l1, Linkage l2)
+{
+	Linkage_info * p1 = &l1->lifo;
+	Linkage_info * p2 = &l2->lifo;
+
+	if (p1->N_violations != p2->N_violations)
+		return (p1->N_violations - p2->N_violations);
+
+	if (p1->unused_word_cost != p2->unused_word_cost)
+		return (p1->unused_word_cost - p2->unused_word_cost);
+
+	float diff = p1->disjunct_cost - p2->disjunct_cost;
+
+#define COST_EPSILON 1.0e-6
+	if (COST_EPSILON < diff) return 1;
+	if (diff < -COST_EPSILON) return -1;
+
+	if (p1->link_cost != p2->link_cost)
+		return (p1->link_cost - p2->link_cost);
+
+	if (l1->num_words != l2->num_words)
+		return l1->num_words - l2->num_words;
+
+	// Don't bother sorting bad linkages any further.
+	if (0 < p1->N_violations) return 0;
+
+	return linkage_equiv_p(l1, l2);
+}
+
+/**
+ * Remove duplicate linkages in the link array. Duplicates can appear
+ * if the number of parses overflowed, or if the number of parses is
+ * larger than the linkage array. In this case, random linkages will
+ * be selected, and, by random chance, duplicate linkages can be
+ * selected. When the alloc array is slightly less than the number of
+ * linkages found, then as many as half(!) of the linkages can be
+ * duplicates.
+ *
+ * This assumes that the duplicates have already been detected and
+ * marked by setting `linkage->dupe=true` during linkage sorting.
+ */
+static void deduplicate_linkages(Sentence sent, int linkage_limit)
+{
+	/* No need for deduplication, if random selection wasn't done. */
+	if (!sent->overflowed && (sent->num_linkages_found <= linkage_limit))
+		return;
+
+	// Deduplicate the valid linkages only; its not worth wasting
+	// CPU time on the rest.  Sorting guarantees that the valid
+	// linkages come first.
+	uint32_t nl = sent->num_valid_linkages;
+	if (2 > nl) return;
+
+	// Sweep away duplicates
+	uint32_t tgt = 0;
+	uint32_t blkstart = 0;
+	uint32_t blklen = 1; // Initial block, already skipped
+	uint32_t num_dupes = 0;
+	for (uint32_t i=1; i<nl; i++)
+	{
+		Linkage lnx = &sent->lnkages[i];
+		if (false == lnx->dupe) { blklen++; continue; }
+		free_linkage(lnx);
+		num_dupes ++;
+
+		// If there's a block of good linkages to copy, then copy.
+		if (0 < blklen)
+		{
+			// Skip initial block; it is already in place.
+			if (0 < tgt)
+			{
+				Linkage ltgt = &sent->lnkages[tgt];
+				Linkage lsrc = &sent->lnkages[blkstart];
+				memmove(ltgt, lsrc, blklen * sizeof(struct Linkage_s));
+			}
+			tgt += blklen;
+			blklen = 0;
+		}
+
+		// The next good linkage comes after this bad one.
+		blkstart = i+1;
+	}
+
+	// Copy the final block. This will copy the rest of the valid
+	// linkages, as well as the bad ones. (We need to copy the bad
+	// ones, because users can still examine them with the UI.)
+	if (0 < tgt)
+	{
+		Linkage ltgt = &sent->lnkages[tgt];
+		Linkage lsrc = &sent->lnkages[blkstart];
+		blklen += sent->num_linkages_alloced - sent->num_valid_linkages;
+		memmove(ltgt, lsrc, blklen * sizeof(struct Linkage_s));
+	}
+
+	assert(num_dupes < sent->num_valid_linkages, "Too many duplicates found!");
+
+	// Adjust the totals.
+	sent->num_linkages_alloced -= num_dupes;
+	sent->num_valid_linkages -= num_dupes;
+	sent->num_linkages_post_processed -= num_dupes;
+}
+
 static void sort_linkages(Sentence sent, Parse_Options opts)
 {
 	if (0 == sent->num_linkages_found) return;
@@ -287,10 +500,17 @@ static void sort_linkages(Sentence sent, Parse_Options opts)
 	/* It they're randomized, don't bother sorting */
 	if (0 != sent->rand_state && sent->dict->shuffle_linkages) return;
 
+	/* Initialize all linkages as unique */
+	for (uint32_t i=0; i<sent->num_linkages_alloced; i++)
+		sent->lnkages[i].dupe = false;
+
+	/* Sorting will also mark some of hem as being duplicates */
 	qsort((void *)sent->lnkages, sent->num_linkages_alloced,
 	      sizeof(struct Linkage_s),
 	      (int (*)(const void *, const void *))opts->cost_model.compare_fn);
 
+	/* Remove the duplicates. */
+	deduplicate_linkages(sent, opts->linkage_limit);
 	print_time(opts, "Sorted all linkages");
 }
 
@@ -400,6 +620,7 @@ void classic_parse(Sentence sent, Parse_Options opts)
 		 * linkages had P.P. violations. Ensure that in case of a timeout we
 		 * will not end up with the previous num_linkages_found. */
 		sent->num_linkages_found = 0;
+		sent->overflowed = false;
 		sent->num_valid_linkages = 0;
 		sent->num_linkages_post_processed = 0;
 
@@ -488,8 +709,8 @@ void classic_parse(Sentence sent, Parse_Options opts)
 		{
 			extractor_t * pex =
 				extractor_new(sent->length, sent->rand_state, IS_GENERATION(sent->dict));
-			bool ovfl = setup_linkages(sent, pex, mchxt, ctxt, opts);
-			process_linkages(sent, pex, ovfl, opts);
+			setup_linkages(sent, pex, mchxt, ctxt, opts);
+			process_linkages(sent, pex, opts);
 			if (IS_GENERATION(sent->dict))
 			    find_unused_disjuncts(sent, pex);
 			free_extractor(pex);
