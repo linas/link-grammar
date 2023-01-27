@@ -48,28 +48,6 @@ char * test = (char *)"";
 ****************************************************************/
 
 /**
- * For sorting the linkages in postprocessing
- */
-
-static int VDAL_compare_parse(Linkage l1, Linkage l2)
-{
-	Linkage_info * p1 = &l1->lifo;
-	Linkage_info * p2 = &l2->lifo;
-
-	if (p1->N_violations != p2->N_violations) {
-		return (p1->N_violations - p2->N_violations);
-	}
-	else if (p1->unused_word_cost != p2->unused_word_cost) {
-		return (p1->unused_word_cost - p2->unused_word_cost);
-	}
-	else if (p1->disjunct_cost > p2->disjunct_cost) return 1;
-	else if (p1->disjunct_cost < p2->disjunct_cost) return -1;
-	else {
-		return (p1->link_cost - p2->link_cost);
-	}
-}
-
-/**
  * Create and initialize a Parse_Options object
  */
 Parse_Options parse_options_create(void)
@@ -88,9 +66,8 @@ Parse_Options parse_options_create(void)
 	debug = po->debug = (char *)"";
 	test = po->test = (char *)"";
 
-	/* A cost of 2.7 allows the usual cost-2 connectors, plus the
-	 * assorted fractional costs, without going to cost 3.0, which
-	 * is used only during panic-parsing. */
+	/* Set dijunct_cost to a bogus value of -10000. The dict-common
+	 * code will set this to a more reasonable default. */
 	po->disjunct_cost = UNINITIALIZED_MAX_DISJUNCT_COST;
 	po->min_null_count = 0;
 	po->max_null_count = 0;
@@ -99,13 +76,12 @@ Parse_Options parse_options_create(void)
 	po->use_sat_solver = false;
 #endif
 	po->linkage_limit = 100;
-#if defined HAVE_HUNSPELL || defined HAVE_ASPELL
-	po->use_spell_guess = 7;
-#else
-	po->use_spell_guess = 0;
-#endif /* defined HAVE_HUNSPELL || defined HAVE_ASPELL */
 
-	po->cost_model.compare_fn = &VDAL_compare_parse;
+	// Disable spell-guessing by default. Aspell 0.60.8 and possibly
+	// others leak memory.
+	po->use_spell_guess = 0;
+
+	po->cost_model.compare_fn = &VDAL_compare_linkages;
 	po->cost_model.type = VDAL;
 	po->short_length = 16;
 	po->all_short = false;
@@ -133,7 +109,7 @@ void parse_options_set_cost_model_type(Parse_Options opts, Cost_Model_type cm)
 	switch(cm) {
 	case VDAL:
 		opts->cost_model.type = VDAL;
-		opts->cost_model.compare_fn = &VDAL_compare_parse;
+		opts->cost_model.compare_fn = &VDAL_compare_linkages;
 		break;
 	default:
 		prt_error("Error: Illegal cost model: %d\n", (int)cm);
@@ -476,7 +452,7 @@ Sentence sentence_create(const char *input_string, Dictionary dict)
 	return sent;
 }
 
-int sentence_split(Sentence sent, Parse_Options opts)
+static int do_sentence_split(Sentence sent, Parse_Options opts)
 {
 	Dictionary dict = sent->dict;
 	bool fw_failed = false;
@@ -525,6 +501,15 @@ int sentence_split(Sentence sent, Parse_Options opts)
 	if (verbosity >= D_USER_TIMES)
 		prt_error("#### Finished tokenizing (%zu tokens)\n", sent->length);
 	return 0;
+}
+
+int sentence_split(Sentence sent, Parse_Options opts)
+{
+	Dictionary dict = sent->dict;
+	dict->start_lookup(dict, sent);
+	int rc = do_sentence_split(sent, opts);
+	dict->end_lookup(dict, sent);
+	return rc;
 }
 
 void sentence_delete(Sentence sent)
@@ -637,9 +622,8 @@ int sentence_link_cost(Sentence sent, LinkageIdx i)
 
 int sentence_parse(Sentence sent, Parse_Options opts)
 {
-	int rc;
-
-	if (IS_GENERATION(sent->dict))
+	Dictionary dict = sent->dict;
+	if (IS_GENERATION(dict))
 	{
 #if USE_SAT_SOLVER
 		if (opts->use_sat_solver)
@@ -656,7 +640,7 @@ int sentence_parse(Sentence sent, Parse_Options opts)
 	}
 
 	if (opts->disjunct_cost == UNINITIALIZED_MAX_DISJUNCT_COST)
-		opts->disjunct_cost = sent->dict->default_max_disjunct_cost;
+		opts->disjunct_cost = dict->default_max_disjunct_cost;
 
 	sent->num_valid_linkages = 0;
 
@@ -666,7 +650,7 @@ int sentence_parse(Sentence sent, Parse_Options opts)
 	 */
 	if (0 == sent->length)
 	{
-		rc = sentence_split(sent, opts);
+		int rc = sentence_split(sent, opts);
 		if (rc) return -1;
 	}
 	else
@@ -687,12 +671,6 @@ int sentence_parse(Sentence sent, Parse_Options opts)
 	}
 
 	resources_reset(opts->resources);
-
-	/* When a dynamic dictionary is used, expressions are read on demand,
-	 * so the connector descriptor table is not yet ready at this point. */
-	if (IS_DYNAMIC_DICT(sent->dict))
-		condesc_setup(sent->dict);
-
 	for (WordIdx w = 0; w < sent->length; w++)
 	{
 		for (X_node *x = sent->word[w].x; x != NULL; x = x->next)

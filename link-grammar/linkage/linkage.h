@@ -53,9 +53,9 @@ struct Linkage_s
 	WordIdx         num_words;    /* Number of (tokenized) words */
 	const char *  * word;         /* Array of word spellings */
 
-	size_t          num_links;    /* Number of links in array */
 	Link *          link_array;   /* Array of links */
-	size_t          lasz;         /* Alloc'ed length of link_array */
+	uint32_t        num_links;    /* Number of links in array */
+	uint32_t        lasz;         /* Alloc'ed length of link_array */
 
 	Disjunct **     chosen_disjuncts; /* Disjuncts used, one per word */
 	size_t          cdsz;         /* Alloc'ed length of chosen_disjuncts */
@@ -67,6 +67,7 @@ struct Linkage_s
 	Linkage_info    lifo;         /* Parse_set index and cost information */
 	bool            is_sent_long; /* num_words >= twopass_length */
 
+	bool            dupe;         /* Duplicate marker */
 	PP_domains *    pp_domains;   /* PP domain info, one for each link */
 
 	Sentence        sent;         /* Used for common linkage data */
@@ -74,8 +75,8 @@ struct Linkage_s
 
 struct Link_s
 {
-	size_t lw;              /* Offset into Linkage->word NOT Sentence->word */
-	size_t rw;              /* Offset into Linkage->word NOT Sentence->word */
+	uint16_t lw;            /* Offset into Linkage->word NOT Sentence->word */
+	uint16_t rw;            /* Offset into Linkage->word NOT Sentence->word */
 	Connector * lc;
 	Connector * rc;
 	const char * link_name; /* Spelling of full link name */

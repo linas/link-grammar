@@ -14,9 +14,9 @@
 
 #include <limits.h>
 #include <inttypes.h>                   // PRIu64
-#if HAVE_THREADS_H
+#if HAVE_THREADS_H && !__EMSCRIPTEN__
 #include <threads.h>
-#endif /* HAVE_THREADS_H */
+#endif /* HAVE_THREADS_H && !__EMSCRIPTEN__ */
 
 #include "api-structures.h"
 #include "connectors.h"
@@ -124,7 +124,7 @@ struct count_context_s
 #define MAX_TABLE_SIZE(s) (s / 10) /* Low load factor, for speed */
 #define MAX_LOG2_TABLE_SIZE ((sizeof(size_t)==4) ? 25 : 34)
 
-#if HAVE_THREADS_H
+#if HAVE_THREADS_H && !__EMSCRIPTEN__
 /* Each thread will get it's own version of the `kept_table`.
  * If the program creates zillions of threads, then there will
  * be a mem-leak if this table is not released when each thread
@@ -147,7 +147,7 @@ static void make_key(void)
 {
 	tss_create(&key, free_tls_table);
 }
-#endif /* HAVE_THREADS_H */
+#endif /* HAVE_THREADS_H && !__EMSCRIPTEN__ */
 
 /**
  * Allocate memory for the connector-pair table and initialize table-size
@@ -164,14 +164,14 @@ static void table_alloc(count_context_t *ctxt, unsigned int shift)
 	static TLS Table_connector **kept_table = NULL;
 	static TLS unsigned int log2_kept_table_size = 0;
 
-#if HAVE_THREADS_H
+#if HAVE_THREADS_H && !__EMSCRIPTEN__
 	// Install a thread-exit handler, to free kept_table on thread-exit.
 	static once_flag flag = ONCE_FLAG_INIT;
 	call_once(&flag, make_key);
 
 	if (NULL == kept_table)
 		tss_set(key, &kept_table);
-#endif /* HAVE_THREADS_H */
+#endif /* HAVE_THREADS_H && !__EMSCRIPTEN__ */
 
 	if (shift == 0)
 		shift = ctxt->log2_table_size + 1; /* Double the table size */
@@ -863,7 +863,7 @@ static Count_bin pseudocount(count_context_t * ctxt,
                            unsigned int null_count)
 {
 	/* This check is not necessary for correctness, but it saves CPU time.
-	 * If a cross link would result, immediatly return 0. Note that there is
+	 * If a cross link would result, immediately return 0. Note that there is
 	 * no need to check here if the nearest_word fields are in the range
 	 * [lw, rw] due to the way start_word/end_word are computed, and due to
 	 * nearest_word checks in form_match_list(). */

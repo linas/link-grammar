@@ -19,13 +19,19 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#if HAVE_THREADS_H
+#include <threads.h> // for mtx_t
+#endif
+
 #include <sqlite3.h>
 
 #include "api-structures.h"
 #include "connectors.h"
+#include "dict-common/dict-affix-impl.h"
 #include "dict-common/dict-api.h"
 #include "dict-common/dict-common.h"
-#include "dict-common/dict-impl.h"
+#include "dict-common/dict-internals.h"
+#include "dict-common/dict-locale.h"
 #include "dict-common/dict-structures.h"
 #include "dict-common/dict-utils.h"      // patch_subscript()
 #include "dict-common/file-utils.h"
@@ -129,6 +135,10 @@ static const char * make_expression(Dictionary dict,
 /* ========================================================= */
 /* Dictionary word lookup procedures. */
 
+#if HAVE_THREADS_H
+static mtx_t global_mutex;
+#endif
+
 typedef struct
 {
 	Dictionary dict;
@@ -138,17 +148,6 @@ typedef struct
 	Exp* exp;
 	char* classname;
 } cbdata;
-
-static void db_free_llist(Dictionary dict, Dict_node *llist)
-{
-	Dict_node * dn;
-	while (llist != NULL)
-	{
-		dn = llist->right;
-		free(llist);
-		llist = dn;
-	}
-}
 
 /* callback -- set bs->exp to the expressions for a class in the dict */
 static int exp_cb(void *user_data, int argc, char **argv, char **colName)
@@ -223,6 +222,9 @@ static char * escape_quotes(const char * s)
 static void
 db_lookup_exp(Dictionary dict, const char *s, cbdata* bs)
 {
+#if HAVE_THREADS_H
+	mtx_lock(&global_mutex);
+#endif
 	sqlite3 *db = dict->db_handle;
 	dyn_str *qry;
 
@@ -243,6 +245,10 @@ db_lookup_exp(Dictionary dict, const char *s, cbdata* bs)
 
 	lgdebug(D_SQL+1, "Found expression for class %s: %s\n",
 	        s, exp_stringify(bs->exp));
+
+#if HAVE_THREADS_H
+	mtx_unlock(&global_mutex);
+#endif
 }
 
 
@@ -279,13 +285,18 @@ static int morph_cb(void *user_data, int argc, char **argv, char **colName)
 	assert(NULL != bs->exp, "Missing disjuncts for word %s %s",
 		scriword, wclass);
 
+#if HAVE_THREADS_H
+	mtx_lock(&global_mutex);
+#endif
 	/* Put each word into a Dict_node. */
-	Dict_node *dn = malloc(sizeof(Dict_node));
-	memset(dn, 0, sizeof(Dict_node));
+	Dict_node *dn = dict_node_new();
 	dn->string = string_set_add(scriword, bs->dict->string_set);
 	dn->right = bs->dn;
 	dn->exp = bs->exp;
 	bs->dn = dn;
+#if HAVE_THREADS_H
+	mtx_unlock(&global_mutex);
+#endif
 
 	return 0;
 }
@@ -443,6 +454,9 @@ static void db_add_categories(Dictionary dict)
 	sqlite3 *db = dict->db_handle;
 	cbdata bs;
 	bs.dict = dict;
+#if HAVE_THREADS_H
+	mtx_lock(&global_mutex);
+#endif
 
 	/* How many lexical categories are there? Find out. */
 	sqlite3_exec(db, "SELECT count(DISTINCT classname) FROM Disjuncts;",
@@ -504,6 +518,9 @@ static void db_add_categories(Dictionary dict)
 
 	/* Set the termination entry. */
 	dict->category[dict->num_categories + 1].num_words = 0;
+#if HAVE_THREADS_H
+	mtx_unlock(&global_mutex);
+#endif
 }
 
 /* ========================================================= */
@@ -511,9 +528,9 @@ static void db_add_categories(Dictionary dict)
 
 static void* db_open(const char * fullname, const void * user_data)
 {
-	int fd;
-	struct stat buf;
-	sqlite3 *db;
+#if HAVE_THREADS_H
+	mtx_init(&global_mutex, mtx_plain);
+#endif
 
 	/* Is there a file here that can be read? */
 	FILE * fh =  fopen(fullname, "r");
@@ -522,13 +539,15 @@ static void* db_open(const char * fullname, const void * user_data)
 
 	/* Get the file size, in bytes. */
 	/* SQLite has a habit of leaving zero-length DB's lying around */
-	fd = fileno(fh);
+	struct stat buf;
+	int fd = fileno(fh);
 	fstat(fd, &buf);
 	fclose(fh);
 	if (0 == buf.st_size)
 		return NULL;
 
 	/* Found a file, of non-zero length. See if that works. */
+	sqlite3 *db;
 	if (sqlite3_open(fullname, &db))
 	{
 		prt_error("Error: Can't open database %s: %s\n",
@@ -546,6 +565,21 @@ static void db_close(Dictionary dict)
 		sqlite3_close(db);
 
 	dict->db_handle = NULL;
+}
+
+static void db_start_lookup(Dictionary dict, Sentence sent)
+{
+}
+
+static void db_end_lookup(Dictionary dict, Sentence sent)
+{
+#if HAVE_THREADS_H
+	mtx_lock(&global_mutex);
+#endif
+	condesc_setup(dict);
+#if HAVE_THREADS_H
+	mtx_unlock(&global_mutex);
+#endif
 }
 
 Dictionary dictionary_create_from_db(const char *lang)
@@ -585,8 +619,10 @@ Dictionary dictionary_create_from_db(const char *lang)
 
 	dict->lookup_list = db_lookup_list;
 	dict->lookup_wild = db_lookup_wild;
-	dict->free_lookup = db_free_llist;
+	dict->free_lookup = dict_node_free_lookup;
 	dict->exists_lookup = db_lookup;
+	dict->start_lookup = db_start_lookup;
+	dict->end_lookup = db_end_lookup;
 	dict->clear_cache = dict_node_noop;
 	dict->close = db_close;
 

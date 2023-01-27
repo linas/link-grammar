@@ -42,15 +42,6 @@ static const float DEFAULT_MAX_DISJUNCT_COST = 2.7f;
 typedef struct Afdict_class_struct Afdict_class;
 typedef struct Regex_node_s Regex_node;
 
-typedef struct X_node_struct X_node;
-struct X_node_struct
-{
-	const char * string;       /* the word itself */
-	Exp * exp;
-	X_node *next;
-	const Gword *word;         /* originating Wordgraph word */
-};
-
 /* The regexes are stored as a linked list of the following nodes. */
 struct Regex_node_s
 {
@@ -174,10 +165,14 @@ struct Dictionary_s
 #endif
 
 	void (*insert_entry)(Dictionary, Dict_node *, int);
+
+	void (*start_lookup)(Dictionary, Sentence);
+	void (*end_lookup)(Dictionary, Sentence);
 	Dict_node* (*lookup_list)(Dictionary, const char*);
 	Dict_node* (*lookup_wild)(Dictionary, const char*);
 	void (*free_lookup)(Dictionary, Dict_node*);
 	bool (*exists_lookup)(Dictionary, const char*);
+
 	void (*clear_cache)(Dictionary);
 	void (*close)(Dictionary);
 
@@ -218,7 +213,6 @@ bool dictionary_generation_request(const Dictionary);
  * and pretty much no one else. If you are not the tokenizer, you
  * probably don't need these. */
 bool dict_has_word(const Dictionary dict, const char *);
-void add_empty_word(Sentence, X_node *);
 
 static inline const char *subscript_mark_str(void)
 {

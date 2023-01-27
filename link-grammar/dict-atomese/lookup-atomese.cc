@@ -10,8 +10,10 @@
 #include <cstdlib>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/api/StorageNode.h>
+#include <opencog/persist/cog-simple/CogSimpleStorage.h>
 #include <opencog/persist/cog-storage/CogStorage.h>
 #include <opencog/persist/file/FileStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 #include <opencog/persist/rocks/RocksStorage.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 #include <opencog/nlp/types/atom_types.h>
@@ -19,9 +21,10 @@
 #undef STRINGIFY
 
 extern "C" {
-#include "../link-includes.h"            // For Dictionary
-#include "../dict-common/dict-common.h"  // for Dictionary_s
-#include "../dict-common/dict-utils.h"   // for size_of_expression()
+#include "../link-includes.h"              // For Dictionary
+#include "../dict-common/dict-common.h"    // for Dictionary_s
+#include "../dict-common/dict-internals.h" // for dict_node_new()
+#include "../dict-common/dict-utils.h"     // for size_of_expression()
 #include "../dict-ram/dict-ram.h"
 #include "lookup-atomese.h"
 };
@@ -65,6 +68,10 @@ using namespace opencog;
 static AtomSpacePtr external_atomspace;
 static StorageNodePtr external_storage;
 
+/// Specify an AtomSpace, and optionally, a StorageNode that will be
+/// used to fetch dictionary contents. This should be done before
+/// opening the dictionary; the values passed here are grabbed by the
+/// dictionary when it is opened.
 void lg_config_atomspace(AtomSpacePtr asp, StorageNodePtr sto)
 {
 	external_atomspace = asp;
@@ -186,7 +193,7 @@ bool as_open(Dictionary dict)
 	local->cost_cutoff = atof(LDEF(COST_CUTOFF_STRING, "6"));
 	local->cost_default = atof(LDEF(COST_DEFAULT_STRING, "1.0"));
 
-	const char* prps = LDEF(PAIR_PREDICATE_STRING, "(LgLink \"ANY\")");
+	const char* prps = LDEF(PAIR_PREDICATE_STRING, "(BondNode \"ANY\")");
 	Handle prph = Sexpr::decode_atom(prps);
 	local->prp = local->asp->add_atom(prph);
 
@@ -227,12 +234,16 @@ bool as_open(Dictionary dict)
 	/* That's needed to force the factory to get installed. */
 	/* We need a more elegant solution to this. */
 	Type snt = local->stnp->get_type();
-	if (COG_STORAGE_NODE == snt)
+	if (COG_SIMPLE_STORAGE_NODE == snt)
+		local->stnp = CogSimpleStorageNodeCast(local->stnp);
+	else if (COG_STORAGE_NODE == snt)
 		local->stnp = CogStorageNodeCast(local->stnp);
-	else if (ROCKS_STORAGE_NODE == snt)
-		local->stnp = RocksStorageNodeCast(local->stnp);
 	else if (FILE_STORAGE_NODE == snt)
 		local->stnp = FileStorageNodeCast(local->stnp);
+	else if (MONO_STORAGE_NODE == snt)
+		local->stnp = MonoStorageNodeCast(local->stnp);
+	else if (ROCKS_STORAGE_NODE == snt)
+		local->stnp = RocksStorageNodeCast(local->stnp);
 	else
 	{
 		prt_error("Error: Unknown storage %s\n", stoname);
@@ -299,11 +310,25 @@ void as_close(Dictionary dict)
 
 // ===============================================================
 
+void as_start_lookup(Dictionary dict, Sentence sent)
+{
+}
+
+void as_end_lookup(Dictionary dict, Sentence sent)
+{
+	Local* local = (Local*) (dict->as_server);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+
+	// Deal with any new connector descriptors that have arrived.
+	condesc_setup(dict);
+}
+
 /// Return true if the given word can be found in the dictionary,
 /// else return false.
 bool as_boolean_lookup(Dictionary dict, const char *s)
 {
 	Local* local = (Local*) (dict->as_server);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 	bool found = dict_node_exists_lookup(dict, s);
 	if (found) return true;
@@ -431,8 +456,7 @@ Exp* make_exprs(Dictionary dict, const Handle& germ)
 /// the dictionary.
 static Dict_node * make_dn(Dictionary dict, Exp* exp, const char* ssc)
 {
-	Dict_node* dn = (Dict_node*) malloc(sizeof(Dict_node));
-	memset(dn, 0, sizeof(Dict_node));
+	Dict_node* dn = dict_node_new();
 	dn->string = ssc;
 	dn->exp = exp;
 
@@ -451,7 +475,7 @@ static Dict_node * make_dn(Dictionary dict, Exp* exp, const char* ssc)
 	}
 
 	// Perform the lookup. We cannot return the dn above, as the
-	// as_free_llist() below will delete it, leading to mem corruption.
+	// dict_node_free_lookup() will delete it, leading to mem corruption.
 	dn = dict_node_lookup(dict, ssc);
 	return dn;
 }
@@ -460,6 +484,9 @@ static Dict_node * make_dn(Dictionary dict, Exp* exp, const char* ssc)
 /// expressions for that word.
 Dict_node * as_lookup_list(Dictionary dict, const char *s)
 {
+	Local* local = (Local*) (dict->as_server);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+
 	// Do we already have this word cached? If so, pull from
 	// the cache.
 	Dict_node* dn = dict_node_lookup(dict, s);
@@ -467,7 +494,6 @@ Dict_node * as_lookup_list(Dictionary dict, const char *s)
 	if (dn) return dn;
 
 	const char* ssc = string_set_add(s, dict->string_set);
-	Local* local = (Local*) (dict->as_server);
 
 	if (local->enable_unknown_word and 0 == strcmp(s, "<UNKNOWN-WORD>"))
 	{
