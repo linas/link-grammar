@@ -582,7 +582,10 @@ class Sentence(object):
             return clg.sentence_num_valid_linkages(self.sent._obj)
 
         def next(self):
+            print("duuude py selfnum=" + str(self.num))
+            print("duuuude py next says num valid lkags=" + str(clg.sentence_num_valid_linkages(self.sent._obj)))
             if self.num == clg.sentence_num_valid_linkages(self.sent._obj):
+                print("duuuude py raise stopper--------\n")
                 raise StopIteration()
             linkage = Linkage(self.num, self.sent, self.parse_options._obj)
             if not linkage:  # SAT sentinel value
