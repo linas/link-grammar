@@ -122,11 +122,11 @@ def linkage_testfile(self, lgdict, popt, desc=''):
     def getwordpos(lkg):
         words_char = []
         words_byte = []
-        self.lcnt += 1
-        print("duuude in py testcsase its" + str(self.lcnt), flush=True)
+        # self.lcnt += 1
+        # print("duuude in py testcsase its" + str(self.lcnt), flush=True)
         for wi, w in enumerate(lkg.words()):
-            print ("diiide its "+str(wi))
-            print ("diiide its "+str(w))
+            # print ("diiide its "+str(wi))
+            # print ("diiide its "+str(w))
             words_char.append(w + str((int(linkage.word_char_start(wi)), int(linkage.word_char_end(wi)))))
             words_byte.append(w + str((int(linkage.word_byte_start(wi)), int(linkage.word_byte_end(wi)))))
         return ' '.join(words_char) + '\n' + ' '.join(words_byte) + '\n'
@@ -161,6 +161,7 @@ def linkage_testfile(self, lgdict, popt, desc=''):
                 print('Sentence:', sent)
             linkages = Sentence(sent, lgdict, popt).parse()
             linkage = next(linkages, None)
+            print("duuuuuuuuuuuuuuuuuuuuude IIIIIIIIIIIIIIIIIIII", flush=True)
 
         # Generate the next linkage of the last input sentence
         elif line[0] == 'N':
@@ -168,6 +169,7 @@ def linkage_testfile(self, lgdict, popt, desc=''):
             constituents = ""
             wordpos = ""
             linkage = next(linkages, None)
+            print("duuuuuuuuuuuuuuuuuuuuude NNNNNNNNNNNNNN", flush=True)
             self.assertTrue(linkage, "at {}:{}: Sentence has too few linkages".format(testfile, lineno))
 
         # Lines starting with O are the parse diagram
@@ -202,11 +204,17 @@ def linkage_testfile(self, lgdict, popt, desc=''):
                 # here that those that we test here always exist (and thus know
                 # their relative order) and skip the rest.
                 if '~' in wordpos or '&' in wordpos:
-                    print("duuuude hello loopy wordpos=" + str(wordpos))
+                    print("duuuude hello loopy wordpos=" + str(wordpos), flush=True)
                     while getwordpos(linkage) != wordpos:
+                        cpo = getwordpos(linkage)
+                        print("duuude wanted=" + str(wordpos), flush=True)
+                        print("duuude goat=" + str(cpo) + "\n", flush=True)
                         linkage = next(linkages, None)
-                        print("duuude inlop linkage=" + str(linkage))
+                        cpo = getwordpos(linkage)
+                        if cpo == wordpos:
+                            print("duuude yayyyyyyyyyy=" + str(linkage), flush=True)
                 self.assertEqual(getwordpos(linkage), wordpos, "at {}:{}".format(testfile, lineno))
+                print("duuude deone with P line", flush=True)
                 wordpos = None
             else:
                 wordpos += line[1:]
