@@ -132,13 +132,13 @@ static void put_choice_in_set(Parse_set *s, Parse_choice *pc)
 	if (s->first == NULL)
 	{
 		s->first = pc;
+		pc->next = NULL;
 	}
 	else
 	{
-		s->tail->next = pc;
+		pc->next = s->first;
+		s->first = pc;
 	}
-	s->tail = pc;
-	pc->next = NULL;
 }
 
 static void record_choice(

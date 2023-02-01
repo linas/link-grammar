@@ -5,6 +5,8 @@ See http://www.abisource.com/projects/link-grammar/api/index.html to get
 more information about C API.
 """
 
+import sys
+
 try:
     #pylint: disable=no-name-in-module
     import linkgrammar.clinkgrammar as clg
@@ -441,6 +443,7 @@ class Linkage(object):
         # Keep all args passed into clg.* functions.
         self.sentence, self.parse_options = sentence, parse_options
         self._obj = clg.linkage_create(idx, sentence._obj, parse_options)
+        print("duuude done linkage create for idx=" + str(idx), flush=True)
 
     def __del__(self):
         if hasattr(self, '_obj'):
@@ -460,6 +463,7 @@ class Linkage(object):
         return clg.linkage_get_num_links(self._obj)
 
     def words(self):
+        print("duuuuude gonna num words " + str(self.num_of_words()), flush=True)
         for i in range(self.num_of_words()):
             yield self.word(i)
 

@@ -1393,6 +1393,7 @@ def linkage_testfile(self, lgdict, popt, desc=''):
     def getwordpos(lkg):
         words_char = []
         words_byte = []
+        print("duuude" + str(lkg.words()))
         for wi, w in enumerate(lkg.words()):
             words_char.append(w + str((int(linkage.word_char_start(wi)), int(linkage.word_char_end(wi)))))
             words_byte.append(w + str((int(linkage.word_byte_start(wi)), int(linkage.word_byte_end(wi)))))
