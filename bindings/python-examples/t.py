@@ -199,12 +199,14 @@ def linkage_testfile(self, lgdict, popt, desc=''):
         # The second P line contains byte positions
         # It ends with an empty line
         elif line[0] == 'P':
+            print("duuuuuuuuuuuuuuuuuuuuude start PPPPPPPP line", flush=True)
             if line[1] == '\n' and len(wordpos) > 1:
                 # Spell guesses may vary between spell packages. We assume
                 # here that those that we test here always exist (and thus know
                 # their relative order) and skip the rest.
+                print("duuuuuuuuuuuuuuuuuuuuude PPPPPPPP ok go", flush=True)
                 if '~' in wordpos or '&' in wordpos:
-                    print("duuuude hello loopy wordpos=" + str(wordpos), flush=True)
+                    print("duuuude desired wordpos=" + str(wordpos), flush=True)
                     while getwordpos(linkage) != wordpos:
                         cpo = getwordpos(linkage)
                         print("duuude wanted=" + str(wordpos), flush=True)
@@ -212,12 +214,15 @@ def linkage_testfile(self, lgdict, popt, desc=''):
                         linkage = next(linkages, None)
                         cpo = getwordpos(linkage)
                         if cpo == wordpos:
-                            print("duuude yayyyyyyyyyy=" + str(linkage), flush=True)
+                            print("duuude yayyyyyaaaayyyaaaayyyyy=" + str(cpo), flush=True)
+                    print("duuude done with LOOOOOOOOOOOOOOOOOOOOP", flush=True)
+
                 self.assertEqual(getwordpos(linkage), wordpos, "at {}:{}".format(testfile, lineno))
-                print("duuude deone with P line", flush=True)
+                print("duuude deone with PPPPPPPPPP go check", flush=True)
                 wordpos = None
             else:
                 wordpos += line[1:]
+            print("duuude deone with PPPPPPPPPP line totally", flush=True)
 
         # Lines starting with "-" contain a Parse Option
         elif line[0] == '-':

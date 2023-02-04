@@ -27,6 +27,7 @@ def add_eqcost_linkage_order(original_class):
             return self
 
         def next(self):
+            print("duuude py srotted next!!!!!")
             # If the list of equal-cost linkages has exhausted, fetch a new one.
             if self.num >= len(self.linkage_list)-1:
                 if self.linkage_list and not self.saved_next:
@@ -39,6 +40,7 @@ def add_eqcost_linkage_order(original_class):
                         self.saved_next = None
                     else:
                         try:
+                            print("duuude py strot call next")
                             linkage = self.linkages.next()
                         except StopIteration:
                             break
@@ -61,6 +63,7 @@ def add_eqcost_linkage_order(original_class):
                 self.linkage_list.sort(key=methodcaller('diagram', screen_width=9999))
 
             # Return the next linkage from the sorted list of equal-cost linkages.
+            print("duuude py strot return nexty besty")
             self.num += 1
             return self.linkage_list[self.num]
 

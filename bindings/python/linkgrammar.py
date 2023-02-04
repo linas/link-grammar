@@ -463,7 +463,7 @@ class Linkage(object):
         return clg.linkage_get_num_links(self._obj)
 
     def words(self):
-        print("duuuuude gonna num words " + str(self.num_of_words()), flush=True)
+        print("duuuuude py num words " + str(self.num_of_words()), flush=True)
         for i in range(self.num_of_words()):
             yield self.word(i)
 
@@ -582,7 +582,7 @@ class Sentence(object):
             return clg.sentence_num_valid_linkages(self.sent._obj)
 
         def next(self):
-            print("duuude py selfnum=" + str(self.num), flush=True)
+            print("duuude py next selfnum=" + str(self.num), flush=True)
             print("duuuude py next says num valid lkags=" + str(clg.sentence_num_valid_linkages(self.sent._obj)), flush=True)
             if self.num == clg.sentence_num_valid_linkages(self.sent._obj):
                 print("duuuude py raise stopper--------\n", flush=True)
