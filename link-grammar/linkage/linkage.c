@@ -315,7 +315,6 @@ void remove_empty_words(Linkage lkg)
 static void compute_chosen_words(Sentence sent, Linkage linkage,
                                  Parse_Options opts)
 {
-printf("duude enter compute chosen\n");
 	WordIdx i;   /* index of chosen_words */
 	WordIdx j;
 	Disjunct **cdjp = linkage->chosen_disjuncts;
@@ -737,7 +736,6 @@ printf("duude enter compute chosen\n");
 		}
 	}
 	linkage->num_words = j;
-printf("duuude exit from chosen numwrods=%d\n", j);
 
 	remap_linkages(linkage, remap); /* Update linkage->link_array / num_links. */
 
@@ -794,7 +792,7 @@ Linkage linkage_create(LinkageIdx k, Sentence sent, Parse_Options opts)
 	else
 #endif
 	{
-printf("duuuude enter linkage_create idx=%lu of total %lu\n", k, sent->num_linkages_post_processed);
+printf("duuuude enter linkage_create() idx=%lu of total %lu\n", k, sent->num_linkages_post_processed);
 		/* Cannot create a Linkage for a discarded linkage. */
 		if (sent->num_linkages_post_processed <= k) return NULL;
 		linkage = &sent->lnkages[k];

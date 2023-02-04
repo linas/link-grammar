@@ -5,8 +5,6 @@ See http://www.abisource.com/projects/link-grammar/api/index.html to get
 more information about C API.
 """
 
-import sys
-
 try:
     #pylint: disable=no-name-in-module
     import linkgrammar.clinkgrammar as clg
