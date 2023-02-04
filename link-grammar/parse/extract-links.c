@@ -129,7 +129,7 @@ make_choice(Parse_set *lset, Connector * llc, Connector * lrc,
  */
 static void put_choice_in_set(Parse_set *s, Parse_choice *pc)
 {
-#if 0
+#if 1
 	if (s->first == NULL)
 	{
 		s->first = pc;
