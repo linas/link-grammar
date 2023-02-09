@@ -125,6 +125,7 @@ static void debug_last(Clause *c, Clause **c_last, const char *type)
 #endif
 }
 
+size_t cccnt=0;
 /**
  * Build the clause for the expression e.  Does not change e
  */
@@ -136,6 +137,9 @@ static Clause * build_clause(Exp *e, clause_context *ct, Clause **c_last)
 	if (e->type == AND_type)
 	{
 		Clause *c1 = pool_alloc(ct->Clause_pool);
+#define RPTN (10*1024*1024)
+cccnt++;
+if(0 == cccnt % RPTN) printf("duuude A up to %lu clauses\n", cccnt);
 		c1->c = NULL;
 		c1->next = NULL;
 		c1->cost = 0.0;
@@ -153,6 +157,8 @@ static Clause * build_clause(Exp *e, clause_context *ct, Clause **c_last)
 					//if (maxcost + e->cost > ct->cost_cutoff) continue;
 
 					Clause *c5 = pool_alloc(ct->Clause_pool);
+cccnt++;
+if(0 == cccnt % RPTN) printf("duuude B up to %lu clauses\n", cccnt);
 					if ((c_head == NULL) && (c_last != NULL)) *c_last = c5;
 					c5->cost = c3->cost + c4->cost;
 					c5->maxcost = maxcost;
@@ -190,6 +196,8 @@ static Clause * build_clause(Exp *e, clause_context *ct, Clause **c_last)
 	else if (e->type == CONNECTOR_type)
 	{
 		c = pool_alloc(ct->Clause_pool);
+cccnt++;
+if(0 == cccnt % RPTN) printf("duuude C up to %lu clauses\n", cccnt);
 		c->c = build_terminal(e, ct);
 		c->cost = 0.0;
 		c->maxcost = 0.0;
@@ -336,8 +344,16 @@ Disjunct *build_disjuncts_for_exp(Sentence sent, Exp* exp, const char *word,
 		ct.Tconnector_pool = sent->Tconnector_pool;
 	}
 
+cccnt=0;
 	// printf("%s\n", lg_exp_stringify(exp));
 	Clause *c = build_clause(exp, &ct, NULL);
+printf ("duuuude done build clauses for >>%s<<\n", word);
+size_t cnt=0;
+Clause *cc = c;
+while(cc) { cnt++; cc=cc->next; }
+printf ("duuuude totlal clauses = %lu pool=%lu for >>%s<<\n", cnt,
+pool_num_elements_issued(sent->Clause_pool),
+word);
 	// print_clause_list(c);
 	Disjunct *dis = build_disjunct(sent, c, word, gs, cost_cutoff, opts);
 	// print_disjunct_list(dis);

@@ -102,7 +102,7 @@ static void build_sentence_disjuncts(Sentence sent, float cost_cutoff,
 	                   /*num_elements*/8192, sizeof(Connector),
 	                   /*zero_out*/true, /*align*/false, /*exact*/false);
 
-#ifdef DEBUG
+#if 1 // def DEBUG
 	size_t num_con_alloced = pool_num_elements_issued(sent->Connector_pool);
 #endif
 
@@ -111,17 +111,25 @@ static void build_sentence_disjuncts(Sentence sent, float cost_cutoff,
 		Disjunct * d = NULL;
 		for (X_node * x = sent->word[w].x; x != NULL; x = x->next)
 		{
+printf("duuude start building djs for word %lu >>%s<<\n", w, sent->word[w].unsplit_word);
 			Disjunct *dx = build_disjuncts_for_exp(sent, x->exp, x->string,
 				&x->word->gword_set_head, cost_cutoff, opts);
+size_t len=0;
+Disjunct *dl =dx;
+while(dl) { len++; dl=dl->next; }
+
+printf("duuude finsihed building djs for word >>%s<< totnumdj=%lu\n",
+sent->word[w].unsplit_word, len);
 			d = catenate_disjuncts(dx, d);
 		}
 		sent->word[w].d = d;
 	}
+printf("duuude totally done djning\n");
 
-#ifdef DEBUG
+#if 1 // DEBUG
 	unsigned int dcnt, ccnt;
 	count_disjuncts_and_connectors(sent, &dcnt, &ccnt);
-	lgdebug(+D_PREP, "%u disjucts, %u connectors (%zu allocated)\n",
+	lgdebug(+3, "%u disjucts, %u connectors (%zu allocated)\n",
 	        dcnt, ccnt,
 	        pool_num_elements_issued(sent->Connector_pool) - num_con_alloced);
 #endif
