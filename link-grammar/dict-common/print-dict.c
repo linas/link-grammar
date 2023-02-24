@@ -721,6 +721,8 @@ static void dyn_print_disjunct_list(dyn_str *s, const Disjunct *dj,
 			}
 		}
 		free(ls);
+
+		if (is_flag(flags, 'o')) return;
 	}
 }
 

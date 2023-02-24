@@ -128,7 +128,7 @@ if (s->first) {
 	while (last->next && pc->md->cost > last->md->cost) last=last->next;
 	pc->next = last->next;
 	last->next = pc;
-printf("duuuude chained last ccost=%f nextcost=%f\n", pc->md->cost, last->md->cost);
+// printf("duuuude chained last ccost=%f nextcost=%f\n", pc->md->cost, last->md->cost);
 } else {
 	// Chain it into the parse set.
 	pc->next = s->first;
@@ -839,7 +839,10 @@ static void list_links(Linkage lkg, Parse_set * set, int index)
 	count_t n; /* No overflow - see extract_links() and process_linkages() */
 
 	assert(set != NULL, "Unexpected NULL Parse_set");
-	if (set->first == NULL) return;
+	if (set->first == NULL) {
+printf(" ooops it's the end!!!!\n");
+return;
+}
 	for (pc = set->first; pc != NULL; pc = pc->next) {
 		n = pc->set[0]->count * pc->set[1]->count;
 		if (index < n) break;
@@ -848,12 +851,19 @@ static void list_links(Linkage lkg, Parse_set * set, int index)
 	assert(pc != NULL, "walked off the end in list_links");
 	issue_links_for_choice(lkg, pc, set);
 
+printf("duuude enter listlinks dj=\n");
+print_disjunct_list(pc->md, "lto");
+
 if (NULL == pc->set[0]->first) {
+	// if (NULL == pc->set[1]->first) return;
+	printf("no more right ");
 	list_links(lkg, pc->set[1], index);
 	return;
 }
 
 if (NULL == pc->set[1]->first) {
+	// if (NULL == pc->set[0]->first) return;
+	printf("no more left ");
 	list_links(lkg, pc->set[0], index);
 	return;
 }
@@ -861,10 +871,14 @@ if (NULL == pc->set[1]->first) {
 float lcost = pc->set[0]->first->md->cost;
 float rcost = pc->set[1]->first->md->cost;
 if (lcost < rcost) {
+	printf("right ");
 	list_links(lkg, pc->set[0], index % pc->set[0]->count);
+	printf("left ");
 	list_links(lkg, pc->set[1], index / pc->set[0]->count);
 } else {
+	printf("righto ");
 	list_links(lkg, pc->set[0], index / pc->set[1]->count);
+	printf("lefto ");
 	list_links(lkg, pc->set[1], index % pc->set[1]->count);
 }
 }
@@ -896,6 +910,7 @@ static void list_random_links(Linkage lkg, unsigned int *rand_state,
 void extract_links(extractor_t * pex, Linkage lkg)
 {
 	int index = lkg->lifo.index;
+printf("duuude extract %d ---------------------------------\n", index);
 	if (index < 0)
 	{
 		bool repeatable = false;
