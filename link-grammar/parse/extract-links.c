@@ -122,8 +122,9 @@ static void record_choice(
 {
 	Parse_choice *pc = make_choice(lset, lrc, rset, rlc, md, pex);
 
-//printf("duuude enter record choice for md=");
-//print_disjunct_list(pc->md, "lot");
+printf("duuude enter record choice for md=");
+print_disjunct_list(pc->md, "lot");
+printf("lset and rsest= %p %p\n", lset->first, rset->first);
 
 // Place in sorted order.
 if (s->first) {
