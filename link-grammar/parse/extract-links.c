@@ -890,8 +890,8 @@ if (NULL == pc->set[1]->first) {
 	return;
 }
 
-float lcost = pc->set[0]->first->md->cost;
-float rcost = pc->set[1]->first->md->cost;
+float lcost = pc->set[0]->first->totcost;
+float rcost = pc->set[1]->first->totcost;
 if (lcost < rcost) {
 	printf("right ");
 	list_links(lkg, pc->set[0], index % pc->set[0]->count);
