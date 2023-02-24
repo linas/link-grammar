@@ -122,9 +122,18 @@ static void record_choice(
 {
 	Parse_choice *pc = make_choice(lset, lrc, rset, rlc, md, pex);
 
+// Place in sorted order.
+if (s->first) {
+	Parse_choice *last = s->first;
+	while (last->next && pc->md->cost > last->md->cost) last=last->next;
+	pc->next = last->next;
+	last->next = pc;
+printf("duuuude chained last ccost=%f nextcost=%f\n", pc->md->cost, last->md->cost);
+} else {
 	// Chain it into the parse set.
 	pc->next = s->first;
 	s->first = pc;
+}
 	s->num_pc++;
 }
 
@@ -838,8 +847,26 @@ static void list_links(Linkage lkg, Parse_set * set, int index)
 	}
 	assert(pc != NULL, "walked off the end in list_links");
 	issue_links_for_choice(lkg, pc, set);
+
+if (NULL == pc->set[0]->first) {
+	list_links(lkg, pc->set[1], index);
+	return;
+}
+
+if (NULL == pc->set[1]->first) {
+	list_links(lkg, pc->set[0], index);
+	return;
+}
+
+float lcost = pc->set[0]->first->md->cost;
+float rcost = pc->set[1]->first->md->cost;
+if (lcost < rcost) {
 	list_links(lkg, pc->set[0], index % pc->set[0]->count);
 	list_links(lkg, pc->set[1], index / pc->set[0]->count);
+} else {
+	list_links(lkg, pc->set[0], index / pc->set[1]->count);
+	list_links(lkg, pc->set[1], index % pc->set[1]->count);
+}
 }
 
 static void list_random_links(Linkage lkg, unsigned int *rand_state,
