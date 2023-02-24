@@ -122,16 +122,26 @@ static void record_choice(
 {
 	Parse_choice *pc = make_choice(lset, lrc, rset, rlc, md, pex);
 
+//printf("duuude enter record choice for md=");
+//print_disjunct_list(pc->md, "lot");
+
 // Place in sorted order.
 if (s->first) {
 	Parse_choice *last = s->first;
 	while (last->next && pc->md->cost > last->md->cost) last=last->next;
-	pc->next = last->next;
-	last->next = pc;
-// printf("duuuude chained last ccost=%f nextcost=%f\n", pc->md->cost, last->md->cost);
+	if (last == s->first)
+	{
+		pc->next = s->first;
+		s->first = pc;
+	}
+	else
+	{
+		pc->next = last->next;
+		last->next = pc;
+	}
+// printf("duuuude chained mdcost=%f priorcost=%f\n", pc->md->cost, last->md->cost);
 } else {
 	// Chain it into the parse set.
-	pc->next = s->first;
 	s->first = pc;
 }
 	s->num_pc++;
