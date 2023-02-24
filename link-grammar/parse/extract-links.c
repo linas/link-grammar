@@ -38,6 +38,7 @@ typedef struct Parse_choice_struct Parse_choice;
 typedef struct Parse_set_struct Parse_set;
 struct Parse_choice_struct
 {
+	float totcost;
 	Parse_choice * next;
 	Parse_set * set[2];
 	Disjunct    *md;           /* the chosen disjunct for the middle word */
@@ -112,6 +113,7 @@ make_choice(Parse_set *lset, Connector * lrc,
 	pc->l_id = (lrc == NULL) ? -1 : lrc->tracon_id;
 	pc->r_id = (rlc == NULL) ? -1 : rlc->tracon_id;
 	pc->md = md;
+	pc->totcost = md->cost;
 	return pc;
 }
 
@@ -124,12 +126,21 @@ static void record_choice(
 
 printf("duuude enter record choice for md=");
 print_disjunct_list(pc->md, "lot");
-printf("lset and rsest= %p %p\n", lset->first, rset->first);
+printf("lset-pc and rest-pc= %p %p\n", lset->first, rset->first);
+
+if (lset->first)
+	pc->totcost += lset->first->totcost;
+
+if (rset->first)
+	pc->totcost += rset->first->totcost;
+
+printf("duuude mdcost=%f totcost=%f\n", md->cost, pc->totcost);
 
 // Place in sorted order.
 if (s->first) {
 	Parse_choice *last = s->first;
-	while (last->next && pc->md->cost > last->md->cost) last=last->next;
+	// while (last->next && pc->md->cost > last->md->cost) last=last->next;
+	while (last->next && pc->totcost > last->totcost) last=last->next;
 	if (last == s->first)
 	{
 		pc->next = s->first;
