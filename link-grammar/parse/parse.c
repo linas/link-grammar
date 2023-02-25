@@ -204,6 +204,8 @@ static void process_linkages(Sentence sent, extractor_t* pex,
 		maxtries = sent->num_linkages_alloced;
 	}
 
+printf("duuude parse tree size=%lu\n", parse_set_size(pex));
+
 	bool need_sane_morphism = !IS_GENERATION(sent->dict) ||
 	                          optional_word_exists(sent);
 	bool need_init = true;
@@ -705,7 +707,9 @@ void classic_parse(Sentence sent, Parse_Options opts)
 		free_count_context(ctxt, sent);
 		ctxt = alloc_count_context(sent, ts_parsing);
 
-		sent->num_linkages_found = do_parse(sent, mchxt, ctxt, opts);
+		int64_t nu = do_parse(sent, mchxt, ctxt, opts);
+printf("duuude do parse says %ld\n", nu);
+		sent->num_linkages_found = nu;
 
 		print_time(opts, "Counted parses (%d w/%u null%s)",
 		           sent->num_linkages_found, sent->null_count,

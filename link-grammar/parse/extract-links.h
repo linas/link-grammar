@@ -29,4 +29,6 @@ void extract_links(extractor_t*, Linkage);
 
 void mark_used_disjuncts(extractor_t *, bool *);
 
+uint64_t parse_set_size(extractor_t*);
+
 #endif /* _EXTRACT_LINKS_H */

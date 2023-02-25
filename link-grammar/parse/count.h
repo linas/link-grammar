@@ -22,7 +22,7 @@ typedef struct count_context_s count_context_t;
 Count_bin *table_lookup(count_context_t *, int, int,
                         const Connector *, const Connector *,
                         unsigned int, size_t *);
-int do_parse(Sentence, fast_matcher_t*, count_context_t*, Parse_Options);
+count_t do_parse(Sentence, fast_matcher_t*, count_context_t*, Parse_Options);
 bool no_count(count_context_t *, int, Connector *, unsigned int, unsigned int);
 Disjunct ***get_cached_match_list(count_context_t *, int, int, Connector *);
 

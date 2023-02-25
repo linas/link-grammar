@@ -859,6 +859,30 @@ static void list_random_links(Linkage lkg, unsigned int *rand_state,
 	list_random_links(lkg, rand_state, pc->set[1]);
 }
 
+static uint64_t pset_size(Parse_set * pset)
+{
+	if (pset->first == NULL) return 0;
+
+	uint64_t tot = 0;
+	for (Parse_choice *pc = pset->first; pc != NULL; pc = pc->next) {
+		tot ++;
+		tot += pset_size(pc->set[0]);
+		tot += pset_size(pc->set[1]);
+	}
+	return tot;
+}
+
+uint64_t parse_set_size(extractor_t * pex)
+{
+printf("duude Pset_bucket_pool size= %lu\n",
+pool_num_elements_issued(pex->Pset_bucket_pool));
+
+printf("duude Parse_choice_pool size= %lu\n",
+pool_num_elements_issued(pex->Parse_choice_pool));
+
+	return pset_size(pex->parse_set);
+}
+
 /**
  * Generate the list of all links of the index'th parsing of the
  * sentence.  For this to work, you must have already called parse, and

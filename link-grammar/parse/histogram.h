@@ -15,10 +15,10 @@
 #include <stdint.h>
 #include <inttypes.h>                   // Format of count_t
 
-#define PARSE_NUM_OVERFLOW (1<<24)  // We always assume sizeof(int)>=4
+#define PARSE_NUM_OVERFLOW (1ULL<<48)  // We always assume sizeof(int)>=4
 
-typedef int32_t count_t;
-typedef int64_t w_count_t;          // For overflow detection
+typedef int64_t count_t;
+typedef __int128 w_count_t;          // For overflow detection
 
 /*
  * Count Histogramming is currently not required for anything, and the
@@ -68,7 +68,7 @@ float hist_cost_cutoff(Count_bin*, count_t count);
 
 #else
 
-#define COUNT_FMT PRId32
+#define COUNT_FMT PRId64
 
 typedef count_t Count_bin;
 typedef w_count_t w_Count_bin;

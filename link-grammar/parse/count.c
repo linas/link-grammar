@@ -397,8 +397,8 @@ static void table_stat(count_context_t *ctxt)
 		else
 		{
 			assert(t->hash != 0, "Invalid hash value: 0");
-			assert((hist_total(&t->count)>=0)&&(hist_total(&t->count) <= INT_MAX),
-			       "Invalid count %"COUNT_FMT, hist_total(&t->count));
+//			assert((hist_total(&t->count)>=0)&&(hist_total(&t->count) <= INT_MAX),
+//			       "Invalid count %"COUNT_FMT, hist_total(&t->count));
 			assert((ctxt->table_lrcnt[0].sz == 0) ||
 			       t->l_id < (int)ctxt->sent->length ||
 			       ((t->l_id >= 255)&&(t->l_id < (int)ctxt->table_lrcnt[0].sz)),
@@ -657,13 +657,13 @@ static void generate_word_skip_vector(count_context_t *ctxt, wordvecp wv,
  */
 static bool parse_count_clamp(w_Count_bin *total)
 {
-	if (INT_MAX < hist_total(total))
+	if (LLONG_MAX < hist_total(total))
 	{
 		/*  Sigh. Overflows can and do occur, esp for the ANY language. */
 #if PERFORM_COUNT_HISTOGRAMMING
-		total->total = INT_MAX;
+		total->total = LLONG_MAX;
 #else
-		*total = INT_MAX;
+		*total = LLONG_MAX;
 #endif /* PERFORM_COUNT_HISTOGRAMMING */
 
 		return true;
@@ -1597,7 +1597,7 @@ static Count_bin do_count(
  * used anywhere, and a 3-5% speedup is available if it is avoided.
  * We plan to use this histogram, later ....
  */
-int do_parse(Sentence sent, fast_matcher_t *mchxt, count_context_t *ctxt,
+count_t do_parse(Sentence sent, fast_matcher_t *mchxt, count_context_t *ctxt,
              Parse_Options opts)
 {
 	Count_bin hist;
@@ -1610,8 +1610,10 @@ int do_parse(Sentence sent, fast_matcher_t *mchxt, count_context_t *ctxt,
 
 	hist = do_count(ctxt, -1, sent->length, NULL, NULL, sent->null_count+1);
 
+printf("duuude docout nullo=%d size=%d tot=%ld\n", sent->null_count, sizeof(hist), hist);
+
 	table_stat(ctxt);
-	return (int)hist_total(&hist);
+	return (count_t)hist_total(&hist);
 }
 
 /* sent_length is used only as a hint for the hash table size ... */
