@@ -181,7 +181,7 @@ printf("duuude mdcost=%f cnt=%f totprb=%f\n", md->cost, toc, pto);
 if (s->first) {
 	Parse_choice *last = s->first;
 	// while (last->next && pc->md->cost > last->md->cost) last=last->next;
-	while (last->next && pc->avgprb > last->avgprb) last=last->next;
+	while (last->next && pc->avgprb < last->avgprb) last=last->next;
 	if (last == s->first)
 	{
 		pc->next = s->first;
@@ -930,7 +930,7 @@ if (NULL == pc->set[1]->first) {
 
 float lcost = pc->set[0]->first->avgprb;
 float rcost = pc->set[1]->first->avgprb;
-if (lcost < rcost) {
+if (lcost > rcost) {
 	printf("right ");
 	list_links(lkg, pc->set[0], index % pc->set[0]->count);
 	printf("left ");
