@@ -27,6 +27,9 @@
 //#define RECOUNT
 //#define DEBUG_X_TABLE
 
+// one over log base 2, for now.
+static float beta = 1.0 / 0.69314718;
+
 typedef struct Parse_choice_struct Parse_choice;
 
 /* Parse_choice records a parse of the word range set[0]->lw to
@@ -38,7 +41,8 @@ typedef struct Parse_choice_struct Parse_choice;
 typedef struct Parse_set_struct Parse_set;
 struct Parse_choice_struct
 {
-	float totcost;
+	float totcnt;
+	float avgprb;
 	Parse_choice * next;
 	Parse_set * set[2];
 	Disjunct    *md;           /* the chosen disjunct for the middle word */
@@ -112,8 +116,47 @@ make_choice(Parse_set *lset, Connector * lrc,
 	pc->l_id = (lrc == NULL) ? -1 : lrc->tracon_id;
 	pc->r_id = (rlc == NULL) ? -1 : rlc->tracon_id;
 	pc->md = md;
-	pc->totcost = md->cost;
+	pc->totcnt = 0.0;
+	pc->avgprb = 0.0;
 	return pc;
+}
+
+
+static void get_pcpr(Parse_choice *pc, float *cnt, float *prb)
+{
+	if (NULL == pc) return;
+	if (pc->totcnt < 0.5)
+	{
+		float ltoc = 0.0;
+		float lpto = 0.0;
+		Parse_choice *lch = pc->set[0]->first;
+		while (lch)
+		{
+			get_pcpr(lch, &ltoc, &lpto);
+			lch = lch->next;
+		}
+
+		float rtoc = 0.0;
+		float rpto = 0.0;
+		Parse_choice *rch = pc->set[1]->first;
+		while (rch)
+		{
+			get_pcpr(rch, &rtoc, &rpto);
+			rch = rch->next;
+		}
+
+		float toc = ltoc * rtoc;
+		float pto = lpto * rpto;
+
+		toc += 1.0;
+		pto += exp(-beta * pc->md->cost);
+
+		pc->totcnt = toc;
+		pc->avgprb = pto / toc;
+	}
+
+	*cnt += pc->totcnt;
+	*prb += pc->totcnt * pc->avgprb;
 }
 
 static void record_choice(
@@ -127,19 +170,18 @@ printf("duuude enter record choice for md=");
 print_disjunct_list(pc->md, "lot");
 printf("lset-pc and rest-pc= %p %p\n", lset->first, rset->first);
 
-if (lset->first)
-	pc->totcost += lset->first->totcost;
+	float toc = 0.0;
+	float pto = 0.0;
+	get_pcpr(pc, &toc, &pto);
 
-if (rset->first)
-	pc->totcost += rset->first->totcost;
+printf("duuude mdcost=%f cnt=%f totprb=%f\n", md->cost, toc, pto);
 
-printf("duuude mdcost=%f totcost=%f\n", md->cost, pc->totcost);
-
+#if 1
 // Place in sorted order.
 if (s->first) {
 	Parse_choice *last = s->first;
 	// while (last->next && pc->md->cost > last->md->cost) last=last->next;
-	while (last->next && pc->totcost > last->totcost) last=last->next;
+	while (last->next && pc->avgprb > last->avgprb) last=last->next;
 	if (last == s->first)
 	{
 		pc->next = s->first;
@@ -155,6 +197,10 @@ if (s->first) {
 	// Chain it into the parse set.
 	s->first = pc;
 }
+#else
+	pc->next = s->first;
+	s->first = pc;
+#endif
 	s->num_pc++;
 }
 
@@ -882,8 +928,8 @@ if (NULL == pc->set[1]->first) {
 	return;
 }
 
-float lcost = pc->set[0]->first->totcost;
-float rcost = pc->set[1]->first->totcost;
+float lcost = pc->set[0]->first->avgprb;
+float rcost = pc->set[1]->first->avgprb;
 if (lcost < rcost) {
 	printf("right ");
 	list_links(lkg, pc->set[0], index % pc->set[0]->count);
