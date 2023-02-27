@@ -145,12 +145,19 @@ static void get_pcpr(Parse_choice *pc, float *cnt, float *prb)
 			rch = rch->next;
 		}
 
-		float toc = ltoc * rtoc;
-		float pto = lpto * rpto;
+		float toc = 1.0;
+		if (0 < ltoc) toc *= ltoc;
+		if (0 < rtoc) toc *= rtoc;
+
+		float pto = 1.0;
+		if (0 < lpto) pto *= lpto;
+		if (0 < rpto) pto *= rpto;
 
 		toc += 1.0;
 		pto += exp(-beta * pc->md->cost);
 
+printf("duuude computed lcnt=%f rcnt=%f lto=%f rto=%f\n", ltoc, rtoc,
+lpto, rpto);
 		pc->totcnt = toc;
 		pc->avgprb = pto / toc;
 	}
