@@ -27,8 +27,8 @@
 //#define RECOUNT
 //#define DEBUG_X_TABLE
 
-// one over log base 2, for now.
-static float beta = 1.0 / 0.69314718;
+// log base 2, for now.
+static float beta = 0.69314718;
 
 typedef struct Parse_choice_struct Parse_choice;
 
