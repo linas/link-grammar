@@ -52,7 +52,7 @@ struct Parse_set_struct
 {
 	Connector      *le, *re;
 	Parse_choice   *first;
-	unsigned int   num_pc;    /* number of Parse_choice elements */
+	unsigned int   num_pc;     /* number of Parse_choice elements */
 	uint8_t        lw, rw;     /* left and right word index */
 	uint8_t        null_count; /* number of island words */
 
@@ -85,7 +85,6 @@ struct extractor_s
 	Pool_desc *    Pset_bucket_pool;
 	Pool_desc *    Parse_choice_pool;
 	bool           islands_ok;
-	bool           sort_match_list;
 
 	/* thread-safe random number state */
 	unsigned int rand_state;
@@ -377,34 +376,6 @@ static Parse_set* dummy_set(int lw, int rw,
 	return &dummy->set;
 }
 
-static int cost_compare(const void *a, const void *b)
-{
-	const Disjunct * const * da = a;
-	const Disjunct * const * db = b;
-	if ((*da)->cost < (*db)->cost) return -1;
-	if ((*da)->cost > (*db)->cost) return 1;
-	return 0;
-}
-
-/**
- * Sort the match-list into ascending disjunct cost. The goal here
- * is to issue the lowest-cost disjuncts first, so that the parse
- * set ends up quasi-sorted. This is not enough to get us a totally
- * sorted parse set, but it does guarantee that at least the very
- * first parse really will be the lowest cost.
- */
-static void sort_match_list(fast_matcher_t *mchxt, size_t mlb)
-{
-	size_t i = mlb;
-
-	while (get_match_list_element(mchxt, i) != NULL)
-		i++;
-
-	if (i - mlb < 2) return;
-
-	qsort(get_match_list(mchxt, mlb), i - mlb, sizeof(Disjunct *), cost_compare);
-}
-
 /**
  * returns NULL if there are no ways to parse, or returns a pointer
  * to a set structure representing all the ways to parse.
@@ -422,40 +393,36 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
                  Connector *le, Connector *re, unsigned int null_count,
                  extractor_t * pex)
 {
-	int start_word, end_word, w;
-	Pset_bucket *xt;
-	Count_bin *count;
-
 	if (!valid_nearest_words(le, re, lw, rw)) return NULL;
 
 	assert(null_count < 0x7fff, "Called with null_count < 0.");
 
-	count = table_lookup(ctxt, lw, rw, le, re, null_count, NULL);
+	Count_bin *count = table_lookup(ctxt, lw, rw, le, re, null_count, NULL);
 
 	/* If there's no counter, then there's no way to parse. */
 	if (NULL == count) return NULL;
 	if (hist_total(count) == 0) return NULL;
 
-	xt = x_table_pointer(lw, rw, le, re, null_count, pex);
+	Pset_bucket *xtp = x_table_pointer(lw, rw, le, re, null_count, pex);
 
 	/* Perhaps we've already computed it; if so, return it. */
-	if (xt != NULL) return &xt->set;
+	if (xtp != NULL) return &xtp->set;
 
 	/* Start it out with the empty set of parse choices. */
 	/* This entry must be updated before we return. */
-	xt = x_table_store(lw, rw, le, re, null_count, pex);
+	xtp = x_table_store(lw, rw, le, re, null_count, pex);
 
 	/* The count we previously computed; it's non-zero. */
-	xt->set.count = hist_total(count);
+	xtp->set.count = hist_total(count);
 
 	//#define NUM_PARSES 4
-	// xt->set.cost_cutoff = hist_cost_cutoff(count, NUM_PARSES);
-	// xt->set.cut_count = hist_cut_total(count, NUM_PARSES);
+	// xtp->set.cost_cutoff = hist_cost_cutoff(count, NUM_PARSES);
+	// xtp->set.cut_count = hist_cut_total(count, NUM_PARSES);
 
-	RECOUNT({xt->set.recount = 1;})
+	RECOUNT({xtp->set.recount = 1;})
 
 	/* If the two words are next to each other, the count == 1 */
-	if (lw + 1 == rw) return &xt->set;
+	if (lw + 1 == rw) return &xtp->set;
 
 	/* The left and right connectors are null, but the two words are
 	 * NOT next to each-other.  */
@@ -466,12 +433,12 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 		Disjunct* dis;
 
 		if (!pex->islands_ok && (lw != -1) && (pex->words[lw].d != NULL))
-			return &xt->set;
-		if (null_count == 0) return &xt->set;
+			return &xtp->set;
+		if (null_count == 0) return &xtp->set;
 
-		RECOUNT({xt->set.recount = 0;})
+		RECOUNT({xtp->set.recount = 0;})
 
-		w = lw + 1;
+		int w = lw + 1;
 		for (int opt = 0; opt <= (int)pex->words[w].optional; opt++)
 		{
 			null_count += opt;
@@ -486,8 +453,8 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 					dummy = dummy_set(lw, w, null_count-1, pex);
 					record_choice(dummy, NULL,
 					              pset, dis->right,
-					              dis, &xt->set, pex);
-					RECOUNT({xt->set.recount += pset->recount;})
+					              dis, &xtp->set, pex);
+					RECOUNT({xtp->set.recount += pset->recount;})
 				}
 			}
 			pset = mk_parse_set(mchxt, ctxt,
@@ -498,13 +465,14 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 				dummy = dummy_set(lw, w, null_count-1, pex);
 				record_choice(dummy, NULL,
 				              pset,  NULL,
-				              NULL, &xt->set, pex);
-				RECOUNT({xt->set.recount += pset->recount;})
+				              NULL, &xtp->set, pex);
+				RECOUNT({xtp->set.recount += pset->recount;})
 			}
 		}
-		return &xt->set;
+		return &xtp->set;
 	}
 
+	int start_word;
 	if (le == NULL)
 	{
 		start_word = MAX(lw+1, re->farthest_word);
@@ -514,6 +482,7 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 		start_word = le->nearest_word;
 	}
 
+	int end_word;
 	if (re == NULL)
 	{
 		end_word = MIN(rw, le->farthest_word+1);
@@ -532,8 +501,8 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 	 * it may omit some optimizations. */
 	if (UINT_MAX == null_count) return NULL;
 
-	RECOUNT({xt->set.recount = 0;})
-	for (w = start_word; w < end_word; w++)
+	RECOUNT({xtp->set.recount = 0;})
+	for (int w = start_word; w < end_word; w++)
 	{
 		/* Start of nonzero leftcount/rightcount range cache check. */
 		Connector *fml_re = re;       /* For form_match_list() only */
@@ -562,7 +531,6 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 			mlcr = get_cached_match_list(ctxt, 1, w, re);
 
 		size_t mlb = form_match_list(mchxt, w, le, lw, fml_re, rw, mlcl, mlcr);
-		if (pex->sort_match_list) sort_match_list(mchxt, mlb);
 
 		for (size_t mle = mlb; get_match_list_element(mchxt, mle) != NULL; mle++)
 		{
@@ -621,8 +589,8 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 								 * that needed to use list_links */
 								record_choice(ls[i], d->left,
 								              rset,  NULL /* d->right */,
-								              d, &xt->set, pex);
-								RECOUNT({xt->set.recount += (w_count_t)ls[i]->recount * rset->recount;})
+								              d, &xtp->set, pex);
+								RECOUNT({xtp->set.recount += (w_count_t)ls[i]->recount * rset->recount;})
 							}
 						}
 					}
@@ -668,8 +636,8 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 									record_choice(lset,
 									              d->left,  /* NULL indicates no link */
 									              rs[j], d->right,
-									              d, &xt->set, pex);
-									RECOUNT({xt->set.recount += lset->recount * rs[j]->recount;})
+									              d, &xtp->set, pex);
+									RECOUNT({xtp->set.recount += lset->recount * rs[j]->recount;})
 								}
 							}
 						}
@@ -685,8 +653,8 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 									if (rs[j] == NULL) continue;
 									record_choice(ls[i], d->left,
 									              rs[j], d->right,
-									              d, &xt->set, pex);
-									RECOUNT({xt->set.recount += ls[i]->recount * rs[j]->recount;})
+									              d, &xtp->set, pex);
+									RECOUNT({xtp->set.recount += ls[i]->recount * rs[j]->recount;})
 								}
 							}
 						}
@@ -696,7 +664,7 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 		}
 		pop_match_list(mchxt, mlb);
 	}
-	return &xt->set;
+	return &xtp->set;
 }
 
 /**
@@ -754,7 +722,6 @@ bool build_parse_set(extractor_t* pex, Sentence sent,
 {
 	pex->words = sent->word;
 	pex->islands_ok = opts->islands_ok;
-	pex->sort_match_list = test_enabled("sort-match-list");
 
 	pex->parse_set =
 		mk_parse_set(mchxt, ctxt,
@@ -816,27 +783,52 @@ static void issue_links_for_choice(Linkage lkg, Parse_choice *pc,
  *
  * In order to generate all the possible linkages, the top-level function
  * is repetitively invoked, when \p index is changing from 0 to
- * \c num_linkages_found-1 (by extract_links(), see process_linkages()).
+ * \k num_linkages_found-1 (by extract_links(), see process_linkages()).
  *
  * How it works:
  *
- * Each "level" in the parse-set tree consists of a linked lists of
- * Parse_choice elements. Each such element is pointed to by a
- * Parse_choice element of an upper level. Each parse_choice element
- * contains two Parse_set elements, that are denoted below as S0 and S1.
+ * Each linkage has the abstact form of a binary tree, with left and
+ * right subtrees.  The Parse_set is an encoding for all possible
+ * trees. Selecting a linkage is then a matter of selecting  tree from
+ * out of the parse-set.
+ *
+ * Each "level" in the parse-set S consists of a linked list of
+ * Parse_choice elements, denoted by Cₘ in the diagram below (running
+ * from C₀ thru Cₖ).  Each Parse_choice contains pointers to two
+ * Parse_set elements, denoted below as S0ₘ and S1ₘ. The structure is
+ * recursive, so that S0ₘ and S1ₘ in turn point to link lists of
+ * Parse_choice. This is shown in ASCII-art below.
+ *
+ *         S
+ *         |
+ *         C₀-------------C₁----------C₂--------C₃- ... --Cₖ
+ *        / \            / \         / \       / \
+ *       /   \          /   \       /   \
+ *     S0₀    S1₀     S0₁    S1₁  S0₂    S1₂
+ *      |     |
+ *      |     C----C-----C
+ *      |
+ *      C---C----C----C
+ *
+ * A single linkage is (conceptually) a tree of Parse_choice, selected
+ * from the Parse_set as follows. Starting from the top S, pick one Cₘ.
+ * This becomes the linkage root. Under it are  S0ₘ and S1ₘ. Pick some
+ * C (any C) from the list of C's given by S0ₘ. Likewise, pick some C
+ * from the S1ₘ list. These two become the left and right sides under
+ * the linkage root. Continue recursively, until leaves are reached.
  *
  * The algo is based on our knowledge of the exact number of paths in each
  * Parse_set element. Note that the count of the root Parse_set (used at
  * the top-level invocation) is equal to num_linkages_found.
  *
  * Each list_links() invocation is done with an \p index parameter
- * within the range of 0 to \c set->count-1 in order to extract all the
+ * within the range of 0 to \k set->count-1 in order to extract all the
  * paths from this set. All the \p index values in that range are used.
  *
  * First a selection of the Parse_choice element within the given
- * Parse_set (with cardinality c) is done.
+ * Parse_set (with cardinality k) is done.
  * We know that:
- *             c-1
+ *             k-1
  * set->count = ∑ S0ₘ * S1ₘ
  *             m=0
  * when S0ₘ and S1ₘ are the number of elements in S0  and S1
