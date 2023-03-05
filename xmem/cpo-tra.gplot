@@ -1,0 +1,24 @@
+
+set term png
+set out 'cpo-tra.png'
+
+set key left
+
+set title "Parse Choice pool size vs Tracon pool size"
+set xlabel "Tracon pool size"
+set ylabel "Parse Choice pool size"
+set logscale x
+set logscale y
+# set xrange [1:101]
+
+# columns:
+# ncall= 1 pcpool= 423300 avg= 423300 max= 423300 | xtb= 16384 set_buck= 12245 avg= 12245 max= 12245 | tra= 12840 avg= 12840 max= 12840 | nw= 13 ndj= 3049 nvg= 3049 max= 3049 | exp= 984 avg= 984 max= 984 | chomax= 653 avg= 653 max= 653 | usr= 1522 sys= 108 rss= 12754344
+
+plot "pcp.dat" using 20:4 with points title "data pool", \
+     x**1.3 with lines lw 2 
+
+#    "pcp.dat" using 13:4 with lines lw 2 title "Psets bucket", \
+#    "pcp.dat" using 29:4 with lines lw 2 title "disjuncts", \
+#    "pcp.dat" using 43:4 with lines lw 2 title "max choice", \
+
+# ------------------------
