@@ -1,0 +1,20 @@
+
+set term png
+set out 'buck-tra.png'
+
+set key left
+
+set title "Pset bucket pool size vs Tracon pool size"
+set xlabel "Tracon pool size"
+set ylabel "Pset bucket pool size"
+set logscale x
+set logscale y
+# set xrange [1:101]
+
+# columns:
+# ncall= 1 pcpool= 423300 avg= 423300 max= 423300 | xtb= 16384 set_buck= 12245 avg= 12245 max= 12245 | tra= 12840 avg= 12840 max= 12840 | nw= 13 ndj= 3049 nvg= 3049 max= 3049 | exp= 984 avg= 984 max= 984 | chomax= 653 avg= 653 max= 653 | usr= 1522 sys= 108 rss= 12754344
+
+plot "pcp.dat" using 20:13 with points title "pset bucket pool", \
+     x with lines lw 2 
+
+# ------------------------
