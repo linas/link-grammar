@@ -168,6 +168,15 @@ static int xestimate_log2_table_size(Sentence sent)
 	return log2_table_size;
 }
 
+static int estimate_log2_table_size(Sentence sent)
+{
+	double ntracon = pool_num_elements_issued(sent->Table_tracon_pool);
+	double lscale = log2(ntracon);
+	int log2_table_size = floor(lscale) + 2;
+	if (log2_table_size < 4) log2_table_size = 4;
+	return log2_table_size;
+}
+
 /// Provide an upper-bound estimate for the number of Parse_choice
 /// elements that will be allocated. This bound is reasonable for
 /// the English-language dictionary, almost never exceeding 100K
