@@ -1,0 +1,24 @@
+
+set term png
+set out 'pcp-max.png'
+
+set key left
+
+set title "Max stuff currently in use"
+set xlabel "Sentence"
+set ylabel ""
+set logscale y
+# set xrange [1:101]
+
+# columns:
+# ncall= 1 pcpool= 423300 avg= 423300 max= 423300 | xtb= 16384 set_buck= 12245 avg= 12245 max= 12245 | tra= 12840 avg= 12840 max= 12840 | nw= 13 ndj= 3049 nvg= 3049 max= 3049 | exp= 984 avg= 984 max= 984 | chomax= 653 avg= 653 max= 653 | usr= 1522 sys= 108 rss= 12754344
+
+plot "pcp.dat" using 2:8 with lines lw 2 title "Parse Choice pool", \
+    "pcp.dat" using 2:17 with lines lw 2 title "Psets bucket", \
+    "pcp.dat" using 2:24 with lines lw 2 title "tracon", \
+    "pcp.dat" using 2:33 with lines lw 2 title "disjuncts", \
+    "pcp.dat" using 2:40 with lines lw 2 title "expressions", \
+    "pcp.dat" using 2:47 with lines lw 2 title "max choice", \
+    "pcp.dat" using 2:54 with lines lw 2 title "RSS (Bytes)"
+
+# ------------------------
