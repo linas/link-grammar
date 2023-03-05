@@ -152,6 +152,7 @@ static int xestimate_log2_table_size(Sentence sent)
 	double ntracon = pool_num_elements_issued(sent->Table_tracon_pool);
 	double ltra = log2(ntracon) + 1.0;  // + 1.0 because floor()
 
+ltra=0;
 	int log2_table_size = floor(fmax(dj_est, ltra));
 
 	// Enforce min and max sizes.
@@ -171,8 +172,8 @@ static int xestimate_log2_table_size(Sentence sent)
 static int estimate_log2_table_size(Sentence sent)
 {
 	double ntracon = pool_num_elements_issued(sent->Table_tracon_pool);
-	double lscale = log2(ntracon);
-	int log2_table_size = floor(lscale) + 2;
+	double lscale = log2(ntracon) + 1.0;
+	int log2_table_size = floor(lscale);
 	if (log2_table_size < 4) log2_table_size = 4;
 	return log2_table_size;
 }
