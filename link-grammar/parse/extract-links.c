@@ -127,7 +127,7 @@ static void record_choice(
 	s->num_pc++;
 }
 
-#ifdef USE_XTABLE_VS_DJ_ESTIMATOR
+#if 1 // def USE_XTABLE_VS_DJ_ESTIMATOR
 /**
  * Return an estimate of the required hash table size. The estimate is
  * based on actual measurements, presented at
@@ -138,7 +138,7 @@ static void record_choice(
  * larger than what is needed. Thus, hash table load factor will be
  * small, usually around 0.25 or even less.
  */
-static int estimate_log2_table_size(Sentence sent)
+static int xestimate_log2_table_size(Sentence sent)
 {
 	/* Size estimate based on measurements (see #1402) */
 	double lscale = log2(sent->num_disjuncts + 1.0) - 0.5 * log2(sent->length);
@@ -723,6 +723,18 @@ bool build_parse_set(extractor_t* pex, Sentence sent,
 		mk_parse_set(mchxt, ctxt,
 		             -1, sent->length, NULL, NULL, null_count+1, pex);
 
+int eo = xestimate_log2_table_size(sent);
+int en = estimate_log2_table_size(sent);
+int ps = pool_num_elements_issued(pex->Pset_bucket_pool);
+int oco = (1<<eo) / ps;
+int ocn = (1<<en) / ps;
+printf("duuuude oco=%d ocn=%d eold=%d enew=%d pset=%lu trac=%lu\n",
+oco, ocn, 
+1<<eo,
+1<<en,
+ps,
+pool_num_elements_issued(sent->Table_tracon_pool)
+);
 	return set_overflowed(pex);
 }
 
