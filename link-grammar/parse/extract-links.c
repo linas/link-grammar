@@ -1050,3 +1050,7 @@ void mark_used_disjuncts(extractor_t *pex, bool *disjunct_used)
 			mark_used_disjunct(&t->set, disjunct_used);
 	}
 }
+
+// ==================================================
+
+#include "pc-display.c"
