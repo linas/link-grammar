@@ -27,18 +27,28 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 
 static void draw_pset(dyn_str *pcd, Parse_set * pset)
 {
-	if (!pset) return;
-
-	Parse_choice * pc = pset->first;
-	dyn_strcat(pcd, "{ rank=same ");
-	while (pc)
+	if (NULL == pset) return;  // Can't ever happen
+	if (NULL == pset->first)
 	{
-		pchoice_node(pcd, pc);
-		dyn_strcat(pcd, " ");
-		pc = pc->next;
+		dyn_strcat(pcd, " \"-\" \n");
+		return;
 	}
-	dyn_strcat(pcd, "}\n");
 
+	// First tell system these are all on same row
+	Parse_choice * pc = pset->first;
+	if (pc)
+	{
+		dyn_strcat(pcd, "{ rank=same ");
+		while (pc)
+		{
+			pchoice_node(pcd, pc);
+			dyn_strcat(pcd, " ");
+			pc = pc->next;
+		}
+		dyn_strcat(pcd, "}\n");
+	}
+
+	// Now draw the vertical tree
 	pc = pset->first;
 	while (pc)
 	{
