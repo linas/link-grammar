@@ -36,6 +36,9 @@ static void draw_pset_name(dyn_str *pcd, Parse_set * pset)
 // Draw horizontal set of parse choices
 static void draw_pset_horizontal(dyn_str *pcd, Parse_set * pset)
 {
+	// Only if two or more
+	if (NULL == pset->first->next) return;
+
 	// Horizontal row for parse choices
 	dyn_strcat(pcd, "    subgraph HZ { rank=same \n");
 
@@ -56,11 +59,19 @@ static void draw_pset_recursive(dyn_str *, Parse_set *);
 
 static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 {
+#if 0
+	dyn_strcat(pcd, "{ rank=same ");
+	draw_pset_name(pcd, pc->set[0]);
+	draw_pset_name(pcd, pc->set[1]);
+	dyn_strcat(pcd, " };\n");
+#endif
+
 	// Draw the left and right sides of binary tree.
 	dyn_strcat(pcd, "    ");
 	pchoice_node(pcd, pc);
 
-	dyn_strcat(pcd, " -> { rank=same ");
+	// dyn_strcat(pcd, " -> { rank=same ");
+	dyn_strcat(pcd, " -> { ");
 	draw_pset_name(pcd, pc->set[0]);
 	draw_pset_name(pcd, pc->set[1]);
 	dyn_strcat(pcd, " };\n");
