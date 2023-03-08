@@ -9,12 +9,20 @@ static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 	dyn_strcat(pcd, buf);
 }
 
+static void draw_pset(dyn_str *, Parse_set *);
+
 static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 {
 	pchoice_node(pcd, pc);
-	dyn_strcat(pcd, ";\n");
 
-	// if (pc->set[0])
+	if (pc->set[0] || pc->set[1])
+	{
+		dyn_strcat(pcd, " -> { \n");
+		draw_pset(pcd, pc->set[0]);
+		draw_pset(pcd, pc->set[1]);
+		dyn_strcat(pcd, " }");
+	}
+	dyn_strcat(pcd, ";\n");
 }
 
 static void draw_pset(dyn_str *pcd, Parse_set * pset)
@@ -22,6 +30,16 @@ static void draw_pset(dyn_str *pcd, Parse_set * pset)
 	if (!pset) return;
 
 	Parse_choice * pc = pset->first;
+	dyn_strcat(pcd, "{ rank=same ");
+	while (pc)
+	{
+		pchoice_node(pcd, pc);
+		dyn_strcat(pcd, " ");
+		pc = pc->next;
+	}
+	dyn_strcat(pcd, "}\n");
+
+	pc = pset->first;
 	while (pc)
 	{
 		draw_pchoice(pcd, pc);
@@ -41,7 +59,7 @@ void display_parse_choice(extractor_t * pex)
 {
 	dyn_str *pcd = dyn_str_new();
 	dyn_strcat(pcd, "digraph {\n");
-	dyn_strcat(pcd, "rankdir=\"LR\";\n");
+	// dyn_strcat(pcd, "rankdir=\"LR\";\n");
 
 	draw_pset(pcd, pex->parse_set);
 	dyn_strcat(pcd, "}\n");
