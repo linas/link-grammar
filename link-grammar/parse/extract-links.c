@@ -154,6 +154,12 @@ static void get_pcpr(Parse_choice *pc, float *cnt, float *prb)
 		if (0 < lpto) pto *= lpto;
 		if (0 < rpto) pto *= rpto;
 
+		if (toc <= 1.1)
+		{
+			toc = 0.0;
+			pto = 0.0;
+		}
+
 		toc += 1.0;
 		pto += exp(-beta * pc->md->cost);
 
@@ -176,7 +182,7 @@ static void record_choice(
 
 printf("duuude enter record choice for md=");
 print_disjunct_list(pc->md, "lot");
-printf("lset-pc and rest-pc= %p %p\n", lset->first, rset->first);
+printf("lset-pc and rset-pc= %p %p\n", lset->first, rset->first);
 
 	float toc = 0.0;
 	float pto = 0.0;
