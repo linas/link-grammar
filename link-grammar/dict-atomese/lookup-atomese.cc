@@ -353,9 +353,6 @@ void as_storage_close(Dictionary dict)
 		local->stnp->close();
 
 	local->stnp = nullptr;
-
-	if (local->pair_dict)
-		free(local->pair_dict);
 }
 
 /// Close the connection to the AtomSpace. This will also empty out
@@ -363,10 +360,17 @@ void as_storage_close(Dictionary dict)
 /// usable after a close.
 void as_close(Dictionary dict)
 {
+	logger().info("Atomese: Close dict `%s`", dict->name);
+
+	as_storage_close(dict);
+
 	if (nullptr == dict->as_server) return;
 	Local* local = (Local*) (dict->as_server);
-	if (not local->using_external_as and local->stnp)
-		local->stnp->close();
+	if (local->pair_dict)
+	{
+		free_dict_node_recursive(local->pair_dict->root);
+		free(local->pair_dict);
+	}
 
 	delete local;
 	dict->as_server = nullptr;
@@ -374,6 +378,90 @@ void as_close(Dictionary dict)
 	// Clear the cache as well
 	free_dictionary_root(dict);
 	dict->num_entries = 0;
+}
+
+// ===============================================================
+
+/**
+ * Specialized version of `condesc_setup()`, tuned for Atomese.
+ * When new expressions are created (even temporary ones, e.g. for MST)
+ * the connectors in those expressions are placed into a connector
+ * hash table. The connectors are then compiled into a form that is
+ * used to speed up matching. For a one-time dictionary load, this is
+ * done by `condesc_setup()`.
+ *
+ * For Atomese, new connectors dribble in with each new sentance.
+ * As there are millions grand-total, calling `condesc_setup()` is
+ * stunningly inefficient; only the new ones need to be processed.
+ * That's what this routine does.
+ *
+ * Limitations:
+ * ++ All connectors are marked UNLIMITED_LEN.
+ * ++ All connectors are assumed to be upper-case only, with no
+ *    lower-case parts. (That means that there will never be two or
+ *    more connectors with the same upper-case part, thus shortening
+ *    the qsort, below.)
+ */
+static void update_condesc(Dictionary dict)
+{
+	ConTable *ct = &dict->contable;
+
+	// How many new ones are there?
+	size_t num_new = ct->num_con - ct->last_num;
+	if (0 == num_new) return;
+
+	condesc_t **sdesc = (condesc_t **) malloc(num_new * sizeof(condesc_t *));
+	size_t i = 0;
+	for (size_t n = 0; n < ct->size; n++)
+	{
+		condesc_t *condesc = ct->hdesc[n].desc;
+
+		if (NULL == condesc) continue;
+		if (UINT32_MAX != condesc->uc_num) continue;
+
+		calculate_connector_info(condesc);
+		condesc->length_limit = UNLIMITED_LEN;
+		sdesc[i++] = condesc;
+	}
+
+	qsort(sdesc, num_new, sizeof(condesc_t *),
+	      condesc_by_uc_constring);
+
+	/* Enumerate the connectors according to their UC part. */
+	int uc_num = ct->num_uc;
+
+	sdesc[0]->uc_num = uc_num;
+	for (size_t n=1; n < num_new; n++)
+	{
+		condesc_t **condesc = &sdesc[n];
+
+		if (condesc[0]->uc_length != condesc[-1]->uc_length)
+		{
+			/* We know that the UC part has been changed. */
+			uc_num++;
+		}
+		else
+		{
+			const char *uc1 = &condesc[0]->string[condesc[0]->uc_start];
+			const char *uc2 = &condesc[-1]->string[condesc[-1]->uc_start];
+			if (0 != strncmp(uc1, uc2, condesc[0]->uc_length))
+			{
+				uc_num++;
+			}
+		}
+
+		//printf("%5d constring=%s\n", uc_num, condesc[0]->string);
+		condesc[0]->uc_num = uc_num;
+	}
+
+	lgdebug(+11, "Dictionary %s: added %zu different connectors "
+	        "(%d with a different UC part)\n",
+	        dict->name, ct->num_con, uc_num+1);
+
+	ct->num_uc = uc_num + 1;
+	ct->last_num = ct->num_con;
+
+	free(sdesc);
 }
 
 // ===============================================================
@@ -438,28 +526,33 @@ void as_end_lookup(Dictionary dict, Sentence sent)
 		sent_words.clear();
 	}
 
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
-
-	// Deal with any new connector descriptors that have arrived.
-	condesc_setup(dict);
-
 	lgdebug(D_USER_INFO, "Atomese: Finish dictionary lookup for >>%s<<\n",
 		sent->orig_sentence);
+
+	// Create connector descriptors for any new connectors.
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	update_condesc(dict);
+}
+
+/// Thread-safe dict lookup.
+static bool locked_dict_node_exists_lookup(Dictionary dict, const char *s)
+{
+	Local* local = (Local*) (dict->as_server);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	return dict_node_exists_lookup(dict, s);
 }
 
 /// Return true if the given word can be found in the dictionary,
 /// else return false.
 bool as_boolean_lookup(Dictionary dict, const char *s)
 {
-	Local* local = (Local*) (dict->as_server);
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
-
-	if (dict_node_exists_lookup(dict, s))
+	if (locked_dict_node_exists_lookup(dict, s))
 	{
 		lgdebug(D_USER_INFO, "Atomese: Found in local dict: >>%s<<\n", s);
 		return true;
 	}
 
+	Local* local = (Local*) (dict->as_server);
 	if (local->enable_unknown_word and 0 == strcmp(s, "<UNKNOWN-WORD>"))
 		return true;
 
@@ -548,38 +641,18 @@ void and_enchain_right(Pool_desc* pool, Exp* &andhead, Exp* &andtail, Exp* item)
 	andtail = item;
 }
 
+// Report Number of entries in the dict, and also RAM usage.
 static void report_dict_usage(Dictionary dict)
 {
-	Dict_node* most_used = nullptr;
-	Dict_node* least_used = nullptr;
-	unsigned long most_cnt = 0;
-	unsigned long least_cnt = 4000123123;
-	for (Dict_node* dn = dict->root; dn; dn = dn->right)
-	{
-		if (dn->use_count > most_cnt)
-		{
-			most_cnt = dn->use_count;
-			most_used = dn;
-		}
-		if (dn->use_count < least_cnt)
-		{
-			least_cnt = dn->use_count;
-			least_used = dn;
-		}
-	}
-	logger().info("LG Dict: %lu entries; most-used: %lu %s least-used: %lu %s",
-		dict->num_entries, most_cnt, most_used->string,
-		least_cnt, least_used->string);
-
-	// Also report RAM usage.
-	size_t psz = pool_size(dict->Exp_pool);
-	size_t apparent = (psz * dict->Exp_pool->element_size) / (1024 * 1024);
-	size_t actual = pool_bytes(dict->Exp_pool) / (1024 * 1024);
-	logger().info("LG Dict: %lu of %lu pool elts in use. %lu/%lu MiBytes apparent/actual",
-		pool_num_elements_issued(dict->Exp_pool), psz, apparent, actual);
+	// We could also print pool_num_elements_issued() but this is not
+	// interesting; its slightly less than pool_size().
+	logger().info("LG Dict: %lu entries; %lu Exp_pool elts; %lu MiBytes",
+		dict->num_entries,
+		pool_size(dict->Exp_pool),
+		pool_bytes(dict->Exp_pool) / (1024 * 1024));
 }
 
-/// Given an expression, wrap  it with a Dict_node and insert it into
+/// Given an expression, wrap it with a Dict_node and insert it into
 /// the dictionary.
 void make_dn(Dictionary dict, Exp* exp, const char* ssc)
 {
@@ -613,26 +686,37 @@ void make_dn(Dictionary dict, Exp* exp, const char* ssc)
 /// expressions for that word.
 Dict_node * as_lookup_list(Dictionary dict, const char *s)
 {
+	// The tokenizer might call us, asking about COMMON_ENTITY_MARKER
+	// in order to figure out if a word can be down-cased. This will
+	// happen outside the sentence-begin-end expression context, so
+	// sentlo will be null. Just ignore this; we don't have entity
+	// markers. Anyway, handling of this kind of stuff needs to be
+	// done differently, anyway. Meanwhile, avoid null ptr derefernce.
+	if (nullptr == sentlo) return nullptr;
+
 	Local* local = (Local*) (dict->as_server);
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
 
-	// Do we already have this word cached? If so, pull from
-	// the cache.
-	Dict_node* dn = dict_node_lookup(dict, s);
-	if (dn)
 	{
-		lgdebug(D_USER_INFO, "Atomese: Found in local dict: >>%s<<\n", s);
+		std::lock_guard<std::mutex> guard(local->dict_mutex);
 
-		// The dict cache contains only full sections. We never store
-		// cartesian pairs, as this has an explosively large number of
-		// disjuncts. So, if the user wants these, we have to generate
-		// them on the fly.
-		if (local->enable_sections and
-		    (0 < local->pair_disjuncts or 0 < local->extra_pairs))
+		// Do we already have this word cached? If so, pull from
+		// the cache.
+		Dict_node* dn = dict_node_lookup(dict, s);
+		if (dn)
 		{
+			lgdebug(D_USER_INFO, "Atomese: Found in local dict: >>%s<<\n", s);
+
+			// The dict cache contains only full sections. We never store
+			// cartesian pairs, as this has an explosively large number of
+			// disjuncts. So, if the user wants these, we have to generate
+			// them on the fly.
+			if (local->enable_sections and
+			    (0 < local->pair_disjuncts or 0 < local->extra_pairs))
+			{
 throw FatalErrorException(TRACE_INFO, "Sorry! Not implemented yet! (word=%s)", s);
+			}
+			return dn;
 		}
-		return dn;
 	}
 
 	if (0 == strcmp(s, LEFT_WALL_WORD)) s = "###LEFT-WALL###";
@@ -660,6 +744,10 @@ throw FatalErrorException(TRACE_INFO, "Sorry! Not implemented yet! (word=%s)", s
 	}
 
 	Exp* exp = nullptr;
+
+	// XXX TODO move this lock so it does not surround AtomSpace
+	// operations (which are slow, and don't need a lock.)
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 	// Create disjuncts consisting entirely of "ANY" links.
 	if (local->any_disjuncts)
@@ -720,6 +808,8 @@ Dict_node * as_lookup_wild(Dictionary dict, const char *s)
 // as well as the expression pool.
 // And also the local AtomSpace.
 //
+// This can be called by link-parser command line, with the !clear
+// "special" command.
 void as_clear_cache(Dictionary dict)
 {
 	Local* local = (Local*) (dict->as_server);
@@ -731,6 +821,8 @@ void as_clear_cache(Dictionary dict)
 	free_dict_node_recursive(dict->root);
 	free_dict_node_recursive(local->pair_dict->root);
 	pool_reuse(dict->Exp_pool);
+
+	local->have_pword.clear();
 
 	// Clear the local AtomSpace too.
 	// Easiest way to do this is to just close and reopen

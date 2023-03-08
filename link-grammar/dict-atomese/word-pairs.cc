@@ -177,13 +177,15 @@ static bool have_pairs(Local* local, const Handle& germ)
 
 /// Return true if the given word occurs in some word-pair, else return
 /// false. As a side-effect, word-pairs are loaded from storage.
-bool pair_boolean_lookup(Dictionary dict, const char *s)
+static bool as_boolean_lookup(Dictionary dict, const char *s)
 {
 	Local* local = (Local*) (dict->as_server);
+
 	Handle wrd = local->asp->add_node(WORD_NODE, s);
 
 	// Are there any pairs that contain this word?
-	if (have_pairs(local, wrd)) return true;
+	if (have_pairs(local, wrd))
+		return true;
 
 	// Does this word belong to any classes?
 	size_t nclass = wrd->getIncomingSetSizeByType(MEMBER_LINK);
@@ -199,11 +201,35 @@ bool pair_boolean_lookup(Dictionary dict, const char *s)
 		if (WORD_CLASS_NODE != wcl->get_type()) continue;
 
 		// If there's at least one, return it.
-		if (have_pairs(local, wcl)) return true;
+		if (have_pairs(local, wcl))
+			return true;
 	}
 
 	return false;
 }
+
+/// Return true if the given word occurs in some word-pair, else return
+/// false. As a side-effect, word-pairs are loaded from storage.
+bool pair_boolean_lookup(Dictionary dict, const char *s)
+{
+	Local* local = (Local*) (dict->as_server);
+
+	// Don't bother going to the AtomSpace, if we've looked this up
+	// word before. This will be faster, in all cases.
+	{
+		std::lock_guard<std::mutex> guard(local->dict_mutex);
+		const auto& havew = local->have_pword.find(s);
+		if (local->have_pword.end() != havew)
+			return havew->second;
+	}
+
+	bool rc = as_boolean_lookup(dict, s);
+
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	local->have_pword.insert({s,rc});
+	return rc;
+}
+
 
 /// Create a list of connectors, one for each available word pair
 /// containing the word in the germ. These are simply OR'ed together.
@@ -273,6 +299,16 @@ static Exp* get_pair_exprs(Dictionary dict, const Handle& germ)
 {
 	Local* local = (Local*) (dict->as_server);
 
+	// Single big fat lock. The goal of this lock is to protect the
+	// Exp_pool in `local->pair_dict`. We have to hold it, begining
+	// to end, because two different threads might be trying to create
+	// expressions for the same word, which then trip over a
+	// duplicate_word error during the second dictionary insert.
+	// Sadly, this wraps a big, fat slow Atomese section in the middle,
+	// but I don't see a way out. Over time, lookups should become
+	// increasingly rare, so this shouldn't matter, after a while.
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+
 	const char* wrd = germ->get_name().c_str();
 	Dictionary prdct = local->pair_dict;
 	Dict_node* dn = dict_node_lookup(prdct, wrd);
@@ -334,6 +370,8 @@ static Exp* get_sent_pair_exprs(Dictionary dict, const Handle& germ,
 
 	Exp* sentex = nullptr;
 	int nfound = 0;
+
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 	// The allexp is an OR_type expression. A linked list of connectors
 	// follow, chained along `operand_next`.

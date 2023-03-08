@@ -12,6 +12,7 @@
 /*************************************************************************/
 
 #include <limits.h>                     // INT_MAX
+#include <malloc.h>                     // malloc_trim
 #include <math.h>                       // log2
 
 #include "connectors.h"
@@ -227,7 +228,16 @@ static int estimate_log2_table_size(Sentence sent)
 	double lscale = log2(sent->num_disjuncts + 1.0) - 0.5 * log2(sent->length);
 	double lo_est = lscale + 4.0;
 	double hi_est = 1.5 * lscale;
-	int log2_table_size = floor(fmax(lo_est, hi_est));
+	double dj_est = fmax(lo_est, hi_est);
+
+	/* For MST disjuncts, the number of elements issued for
+	 * pex->Pset_bucket_pool is almost exactly equal to the num elts
+	 * issued for sent->Table_tracon_pool.  This provides a better
+	 * estimate when parsing with MST, when the above is too low.  */
+	double ntracon = pool_num_elements_issued(sent->Table_tracon_pool);
+	double ltra = log2(ntracon) + 1.0;  // + 1.0 because floor()
+
+	int log2_table_size = floor(fmax(dj_est, ltra));
 
 	// Enforce min and max sizes.
 	if (log2_table_size < 4) log2_table_size = 4;
@@ -293,9 +303,9 @@ extractor_t * extractor_new(Sentence sent)
 
 	// What's good for the goose is good for the gander.
 	// The pex->x_table_size is a good upper-bound estimate for how
-	// many buckets we will be allocating. Divide by two, based on
+	// many buckets we will be allocating. Divide by four, based on
 	// the observed fill ratio.
-	size_t pbsze = pex->x_table_size / 2;
+	size_t pbsze = pex->x_table_size / 4;
 	pex->Pset_bucket_pool =
 		pool_new(__func__, "Pset_bucket",
 		         /*num_elements*/pbsze, sizeof(Pset_bucket),
@@ -344,10 +354,27 @@ void free_extractor(extractor_t * pex)
 	pex->x_table_size = 0;
 	pex->x_table = NULL;
 
+#if defined __GNUC__
+	// MST parsing can result in pathological cases, with almost a
+	// billion elts in the Parse_choice_pool. This blows up the
+	// resident-set size (RSS) over time. Avoid this issue by trimming.
+	// (English & Russian stay below one million).
+	// Do this here, and not elsewhere, simply because there's no
+	// access to the pool_size at any later point in time.
+	bool trim = false;
+	if (3012012 < pool_size(pex->Parse_choice_pool)) trim = true;
+#endif
+
 	pool_delete(pex->Pset_bucket_pool);
 	pool_delete(pex->Parse_choice_pool);
 
 	xfree((void *) pex, sizeof(extractor_t));
+
+#if defined __GNUC__
+	// malloc_trim() is a gnu extension.  An alternative would be
+	// to call madvise(MADV_DONTNEED) but this is more complicated.
+	if (trim) malloc_trim(0);
+#endif
 }
 
 /**
@@ -576,7 +603,7 @@ Parse_set * mk_parse_set(fast_matcher_t *mchxt,
 		}
 		/* End of nonzero leftcount/rightcount range cache check. */
 
-		Disjunct ***mlcl = NULL, ***mlcr = NULL;
+		match_list_cache *mlcl = NULL, *mlcr = NULL;
 
 		if (le != NULL)
 			mlcl = get_cached_match_list(ctxt, 0, w, le);
@@ -836,7 +863,7 @@ static void issue_links_for_choice(Linkage lkg, Parse_choice *pc,
  *
  * In order to generate all the possible linkages, the top-level function
  * is repetitively invoked, when \p index is changing from 0 to
- * \k num_linkages_found-1 (by extract_links(), see process_linkages()).
+ * \c num_linkages_found-1 (by extract_links(), see process_linkages()).
  *
  * How it works:
  *
@@ -875,7 +902,7 @@ static void issue_links_for_choice(Linkage lkg, Parse_choice *pc,
  * the top-level invocation) is equal to num_linkages_found.
  *
  * Each list_links() invocation is done with an \p index parameter
- * within the range of 0 to \k set->count-1 in order to extract all the
+ * within the range of 0 to \c set->count-1 in order to extract all the
  * paths from this set. All the \p index values in that range are used.
  *
  * First a selection of the Parse_choice element within the given
