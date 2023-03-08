@@ -2,10 +2,15 @@
 // See wg-display.c
 // dot -Txlib file
 
+#include "print/print-util.h"
+
 static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 {
+	char* wrd = strdupa(pc->md->word_string);
+	patch_subscript_mark(wrd);
+
 	char buf[80];
-	sprintf(buf, "\"%s %d %d\"", pc->md->word_string, pc->l_id, pc->r_id);
+	sprintf(buf, "\"%s %lx\"", wrd, ((uint64_t)pc) & 0xffffff);
 	dyn_strcat(pcd, buf);
 }
 
@@ -29,17 +34,22 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	draw_pset_recursive(pcd, pc->set[1]);
 }
 
+int nid = 0;
+
 static void draw_pset(dyn_str *pcd, Parse_set * pset)
 {
 	if (NULL == pset) return;  // Can't ever happen
 	if (NULL == pset->first)
 	{
-		// dyn_strcat(pcd, " \"-\" \n");
+		nid ++;
+		char buf[80];
+		sprintf(buf, "\"%d\"", nid);
+		dyn_strcat(pcd, buf);
 		return;
 	}
 
 	// Horizontal row for parse choices
-	dyn_strcat(pcd, "    subgraph {\n");
+	dyn_strcat(pcd, "    subgraph HZ {\n");
 
 	// First tell system these are all on same row
 	Parse_choice * pc = pset->first;
@@ -68,6 +78,8 @@ static void draw_pset(dyn_str *pcd, Parse_set * pset)
 
 static void draw_pset_recursive(dyn_str *pcd, Parse_set * pset)
 {
+	if (NULL == pset->first) return;
+
 	// Now draw the vertical tree
 	dyn_strcat(pcd, "subgraph {\n");
 	draw_pset(pcd, pset);
