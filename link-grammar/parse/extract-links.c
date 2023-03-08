@@ -180,7 +180,8 @@ static void record_choice(
 {
 	Parse_choice *pc = make_choice(lset, lrc, rset, rlc, md, pex);
 
-printf("duuude enter record choice for md=");
+printf("-------\n");
+printf("duuude enter record choice for md=\n");
 print_disjunct_list(pc->md, "lot");
 printf("lset-pc and rset-pc= %p %p\n", lset->first, rset->first);
 
