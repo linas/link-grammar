@@ -34,33 +34,38 @@ static void draw_pset(dyn_str *pcd, Parse_set * pset)
 		return;
 	}
 
+	// Horizontal row for parse choices
+	dyn_strcat(pcd, " subgraph {\n");
+
 	// First tell system these are all on same row
 	Parse_choice * pc = pset->first;
-	if (pc)
+	dyn_strcat(pcd, "    { rank=same ");
+	while (pc)
 	{
-		dyn_strcat(pcd, "{ rank=same ");
-		while (pc)
-		{
-			pchoice_node(pcd, pc);
-			dyn_strcat(pcd, " ");
-			pc = pc->next;
-		}
-		dyn_strcat(pcd, "}\n");
+		pchoice_node(pcd, pc);
+		dyn_strcat(pcd, " ");
+		pc = pc->next;
 	}
+	dyn_strcat(pcd, "}\n");
+
+	// Now draw the horizontal list
+	dyn_strcat(pcd, "    ");
+	pc = pset->first;
+	while (pc)
+	{
+		pchoice_node(pcd, pc);
+		pc = pc->next;
+
+		if (pc)
+			dyn_strcat(pcd, " -> ");
+	}
+	dyn_strcat(pcd, ";\n};\n");
 
 	// Now draw the vertical tree
 	pc = pset->first;
 	while (pc)
 	{
 		draw_pchoice(pcd, pc);
-
-		if (pc->next)
-		{
-			pchoice_node(pcd, pc);
-			dyn_strcat(pcd, " -> ");
-			pchoice_node(pcd, pc->next);
-			dyn_strcat(pcd, ";\n");
-		}
 		pc = pc->next;
 	}
 }
