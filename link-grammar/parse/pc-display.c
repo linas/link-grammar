@@ -37,6 +37,9 @@ static void draw_pset_name(dyn_str *pcd, Parse_set * pset, const char* lr)
 // Draw horizontal set of parse choices
 static void draw_pset_horizontal(dyn_str *pcd, Parse_set * pset)
 {
+	if (pset->first->done) return;
+	pset->first->done = true;
+
 	// Only if two or more
 	if (NULL == pset->first->next) return;
 
@@ -53,6 +56,7 @@ static void draw_pset_horizontal(dyn_str *pcd, Parse_set * pset)
 		if (pc)
 			dyn_strcat(pcd, " -> ");
 	}
+	dyn_strcat(pcd, " [label=next]");
 	dyn_strcat(pcd, ";\n    };\n");
 }
 
@@ -60,6 +64,9 @@ static void draw_pset_recursive(dyn_str *, Parse_set *);
 
 static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 {
+	if (pc->dolr) return;
+	pc->dolr = true;
+
 	bool eith = pc->set[0]->first || pc->set[1]->first;
 	if (!eith) return;
 
@@ -77,6 +84,7 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	draw_pset_name(pcd, pc->set[0], "l");
 	draw_pset_name(pcd, pc->set[1], "r");
 	if (both) dyn_strcat(pcd, "}");
+	// dyn_strcat(pcd, " [label=lr]");
 	dyn_strcat(pcd, "};\n");
 
 	dyn_strcat(pcd, "    subgraph RECURSE {");

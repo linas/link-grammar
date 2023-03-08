@@ -48,6 +48,8 @@ struct Parse_choice_struct
 	Parse_set * set[2];
 	Disjunct    *md;           /* the chosen disjunct for the middle word */
 	int32_t     l_id, r_id;    /* the tracon IDs used in this disjunct */
+	bool done;
+	bool dolr;
 };
 
 /* Parse_set serves as a header of Parse_choice chained elements, that
@@ -119,6 +121,8 @@ make_choice(Parse_set *lset, Connector * lrc,
 	pc->md = md;
 	pc->totcnt = 0.0;
 	pc->avgprb = 0.0;
+	pc->done = false;
+	pc->dolr = false;
 	return pc;
 }
 
