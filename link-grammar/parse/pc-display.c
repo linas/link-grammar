@@ -4,6 +4,7 @@
 
 #include "print/print-util.h"
 
+// Append a unique string for each parse choice.
 static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 {
 	char* wrd = strdupa(pc->md->word_string);
@@ -14,27 +15,49 @@ static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 	dyn_strcat(pcd, buf);
 }
 
+int nid = 0;
+
+// Append the main pset name
+static void draw_pset_name(dyn_str *pcd, Parse_set * pset)
+{
+	if (NULL == pset) return;  // Can't ever happen
+	if (NULL == pset->first)
+	{
+		char buf[80];
+		sprintf(buf, "\"%d\" ", nid);
+		dyn_strcat(pcd, buf);
+		return;
+	}
+
+	pchoice_node(pcd, pset->first);
+}
+
 static void draw_pset(dyn_str *, Parse_set *);
 static void draw_pset_recursive(dyn_str *, Parse_set *);
 
 static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 {
+	dyn_strcat(pcd, "    { rank=same ");
+	draw_pset_name(pcd, pc->set[0]);
+	draw_pset_name(pcd, pc->set[1]);
+	dyn_strcat(pcd, " };\n");
+
+	dyn_strcat(pcd, "    ");
 	pchoice_node(pcd, pc);
 
-	if (pc->set[0] || pc->set[1])
-	{
-		dyn_strcat(pcd, " -> { \n");
-		draw_pset(pcd, pc->set[0]);
-		draw_pset(pcd, pc->set[1]);
-		dyn_strcat(pcd, " }");
-	}
-	dyn_strcat(pcd, ";\n");
+	dyn_strcat(pcd, " -> { ");
+	draw_pset_name(pcd, pc->set[0]);
+	draw_pset_name(pcd, pc->set[1]);
+	dyn_strcat(pcd, " };\n");
+
+	nid++;
+
+	// draw_pset(pcd, pc->set[0]);
+	// draw_pset(pcd, pc->set[1]);
 
 	draw_pset_recursive(pcd, pc->set[0]);
 	draw_pset_recursive(pcd, pc->set[1]);
 }
-
-int nid = 0;
 
 static void draw_pset(dyn_str *pcd, Parse_set * pset)
 {
