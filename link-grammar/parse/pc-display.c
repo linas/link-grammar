@@ -15,15 +15,19 @@ static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 	dyn_strcat(pcd, buf);
 }
 
+// #define DRAW_NUL
+
 // Append the main pset name, or null if null.
-static void draw_pset_name(dyn_str *pcd, Parse_set * pset)
+static void draw_pset_name(dyn_str *pcd, Parse_set * pset, const char* lr)
 {
 	if (NULL == pset) return;  // Can't ever happen
 	if (NULL == pset->first)
 	{
+#ifdef DRAW_NUL
 		char buf[80];
-		sprintf(buf, "\"nul %lx\" ", ((uint64_t)pset) & 0xffff);
+		sprintf(buf, "\"nu%s %lx\" ", lr, ((uint64_t)pset) & 0xffff);
 		dyn_strcat(pcd, buf);
+#endif
 		return;
 	}
 
@@ -65,11 +69,13 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	dyn_strcat(pcd, " -> ");
 
 	bool both = pc->set[0]->first && pc->set[1]->first;
+#ifdef DRAW_NUL
 	both=true;
+#endif
 
 	if (both) dyn_strcat(pcd, "{ rank=same ");
-	draw_pset_name(pcd, pc->set[0]);
-	draw_pset_name(pcd, pc->set[1]);
+	draw_pset_name(pcd, pc->set[0], "l");
+	draw_pset_name(pcd, pc->set[1], "r");
 	if (both) dyn_strcat(pcd, "}");
 	dyn_strcat(pcd, "};\n");
 
