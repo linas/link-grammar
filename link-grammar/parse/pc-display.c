@@ -63,19 +63,18 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	if (!eith) return;
 
 	// Draw the left and right sides of binary tree.
-	dyn_strcat(pcd, "    ");
+	dyn_strcat(pcd, "    subgraph LR { ");
 	pchoice_node(pcd, pc);
 	dyn_strcat(pcd, " -> ");
 
 	bool both = pc->set[0]->first && pc->set[1]->first;
-	// if (both) dyn_strcat(pcd, "{ rank=same ");
-	if (both) dyn_strcat(pcd, "{ ");
+	if (both) dyn_strcat(pcd, "{ rank=same ");
 	draw_pset_name(pcd, pc->set[0]);
 	draw_pset_name(pcd, pc->set[1]);
 	if (both) dyn_strcat(pcd, "}");
-	dyn_strcat(pcd, ";\n");
+	dyn_strcat(pcd, "};\n");
 
-	dyn_strcat(pcd, "subgraph VERT {\n");
+	dyn_strcat(pcd, "    subgraph RECURSE {");
 	draw_pset_recursive(pcd, pc->set[0]);
 	draw_pset_recursive(pcd, pc->set[1]);
 	dyn_strcat(pcd, "};\n");
