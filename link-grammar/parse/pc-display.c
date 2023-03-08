@@ -11,7 +11,8 @@ static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 	patch_subscript_mark(wrd);
 
 	char buf[80];
-	sprintf(buf, "\"%s %lx\" ", wrd, ((uint64_t)pc) & 0xffffff);
+	sprintf(buf, "\"%s %lx\navg=%f\" ", wrd, ((uint64_t)pc) & 0xffffff,
+		pc->avgprb);
 	dyn_strcat(pcd, buf);
 }
 
@@ -45,6 +46,7 @@ static void draw_pset_horizontal(dyn_str *pcd, Parse_set * pset)
 
 	// Horizontal row for parse choices
 	dyn_strcat(pcd, "    subgraph HZ { rank=same \n");
+	// dyn_strcat(pcd, "    cluster=true;\n");
 
 	dyn_strcat(pcd, "        ");
 	Parse_choice * pc = pset->first;
@@ -71,7 +73,7 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	if (!eith) return;
 
 	// Draw the left and right sides of binary tree.
-	dyn_strcat(pcd, "    subgraph LR { ");
+	dyn_strcat(pcd, "    subgraph TREE { ");
 	pchoice_node(pcd, pc);
 	dyn_strcat(pcd, " -> ");
 
@@ -88,6 +90,9 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	dyn_strcat(pcd, "};\n");
 
 	dyn_strcat(pcd, "    subgraph RECURSE {");
+	// dyn_strcat(pcd, "    newrank=true ");
+	// dyn_strcat(pcd, "    rankdir=LR ");
+	// dyn_strcat(pcd, "    rankdir=TB ");
 	draw_pset_recursive(pcd, pc->set[0]);
 	draw_pset_recursive(pcd, pc->set[1]);
 	dyn_strcat(pcd, "};\n");
