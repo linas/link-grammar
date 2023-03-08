@@ -59,30 +59,27 @@ static void draw_pset_recursive(dyn_str *, Parse_set *);
 
 static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 {
-#if 0
-	dyn_strcat(pcd, "{ rank=same ");
-	draw_pset_name(pcd, pc->set[0]);
-	draw_pset_name(pcd, pc->set[1]);
-	dyn_strcat(pcd, " };\n");
-#endif
+	bool eith = pc->set[0]->first || pc->set[1]->first;
+	if (eith)
+	{
+		// Draw the left and right sides of binary tree.
+		dyn_strcat(pcd, "    ");
+		pchoice_node(pcd, pc);
+		dyn_strcat(pcd, " -> ");
 
-	// Draw the left and right sides of binary tree.
-	dyn_strcat(pcd, "    ");
-	pchoice_node(pcd, pc);
-	dyn_strcat(pcd, " -> ");
+		bool both = pc->set[0]->first && pc->set[1]->first;
+		// if (both) dyn_strcat(pcd, "{ rank=same ");
+		if (both) dyn_strcat(pcd, "{ ");
+		draw_pset_name(pcd, pc->set[0]);
+		draw_pset_name(pcd, pc->set[1]);
+		if (both) dyn_strcat(pcd, "}");
+		dyn_strcat(pcd, ";\n");
+	}
 
-	bool both = pc->set[0]->first && pc->set[1]->first;
-	if (both) dyn_strcat(pcd, "{ ");
-	draw_pset_name(pcd, pc->set[0]);
-	draw_pset_name(pcd, pc->set[1]);
-	if (both) dyn_strcat(pcd, "}");
-	dyn_strcat(pcd, ";\n");
-
-	// draw_pset(pcd, pc->set[0]);
-	// draw_pset(pcd, pc->set[1]);
-
+	dyn_strcat(pcd, "subgraph VERT {\n");
 	draw_pset_recursive(pcd, pc->set[0]);
 	draw_pset_recursive(pcd, pc->set[1]);
+	dyn_strcat(pcd, "};\n");
 }
 
 static void draw_pset_recursive(dyn_str *pcd, Parse_set * pset)
