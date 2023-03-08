@@ -182,7 +182,7 @@ static void record_choice(
 	Parse_choice *pc = make_choice(lset, lrc, rset, rlc, md, pex);
 
 printf("-------\n");
-printf("duuude enter record choice for md=\n");
+printf("duuude enter record choice %p\n", pc);
 print_disjunct_list(pc->md, "lot");
 printf("lset-pc and rset-pc= %p %p\n", lset->first, rset->first);
 
@@ -958,14 +958,14 @@ print_disjunct_list(pc->md, "lto");
 
 if (NULL == pc->set[0]->first) {
 	// if (NULL == pc->set[1]->first) return;
-	printf("no more right ");
+	printf("no more to left\n");
 	list_links(lkg, pc->set[1], index);
 	return;
 }
 
 if (NULL == pc->set[1]->first) {
 	// if (NULL == pc->set[0]->first) return;
-	printf("no more left ");
+	printf("no more to right\n");
 	list_links(lkg, pc->set[0], index);
 	return;
 }
