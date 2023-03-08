@@ -128,6 +128,7 @@ static void get_pcpr(Parse_choice *pc, float *cnt, float *prb)
 	if (NULL == pc) return;
 	if (pc->totcnt < 0.5)
 	{
+		bool havel = false;
 		float ltoc = 0.0;
 		float lpto = 0.0;
 		Parse_choice *lch = pc->set[0]->first;
@@ -135,8 +136,10 @@ static void get_pcpr(Parse_choice *pc, float *cnt, float *prb)
 		{
 			get_pcpr(lch, &ltoc, &lpto);
 			lch = lch->next;
+			havel = true;
 		}
 
+		bool haver = false;
 		float rtoc = 0.0;
 		float rpto = 0.0;
 		Parse_choice *rch = pc->set[1]->first;
@@ -144,17 +147,15 @@ static void get_pcpr(Parse_choice *pc, float *cnt, float *prb)
 		{
 			get_pcpr(rch, &rtoc, &rpto);
 			rch = rch->next;
+			haver = true;
 		}
 
 		float toc = 1.0;
-		if (0 < ltoc) toc *= ltoc;
-		if (0 < rtoc) toc *= rtoc;
-
 		float pto = 1.0;
-		if (0 < lpto) pto *= lpto;
-		if (0 < rpto) pto *= rpto;
+		if (havel) { toc *= ltoc; pto *= lpto; }
+		if (haver) { toc *= rtoc; pto *= rpto; }
 
-		if (toc <= 1.1)
+		if (!havel && !haver)
 		{
 			toc = 0.0;
 			pto = 0.0;
