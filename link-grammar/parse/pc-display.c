@@ -11,7 +11,7 @@ static void pchoice_node(dyn_str *pcd, Parse_choice * pc)
 	patch_subscript_mark(wrd);
 
 	char buf[80];
-	sprintf(buf, "\"%s %lx\"", wrd, ((uint64_t)pc) & 0xffffff);
+	sprintf(buf, "\"%s %lx\" ", wrd, ((uint64_t)pc) & 0xffffff);
 	dyn_strcat(pcd, buf);
 }
 
@@ -69,12 +69,14 @@ static void draw_pchoice(dyn_str *pcd, Parse_choice * pc)
 	// Draw the left and right sides of binary tree.
 	dyn_strcat(pcd, "    ");
 	pchoice_node(pcd, pc);
+	dyn_strcat(pcd, " -> ");
 
-	// dyn_strcat(pcd, " -> { rank=same ");
-	dyn_strcat(pcd, " -> { ");
+	bool both = pc->set[0]->first && pc->set[1]->first;
+	if (both) dyn_strcat(pcd, "{ ");
 	draw_pset_name(pcd, pc->set[0]);
 	draw_pset_name(pcd, pc->set[1]);
-	dyn_strcat(pcd, " };\n");
+	if (both) dyn_strcat(pcd, "}");
+	dyn_strcat(pcd, ";\n");
 
 	// draw_pset(pcd, pc->set[0]);
 	// draw_pset(pcd, pc->set[1]);
