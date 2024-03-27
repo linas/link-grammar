@@ -1,0 +1,9 @@
+
+# Hand-measured timing for pack_sentence_for_pruning()
+# Discussion #1479
+#
+# Disjuncts connectors seconds
+740634	2900692	1.96
+2044261	9121816	6.17
+23451107	117142399	500.52
+59575111	302831514	4222.75

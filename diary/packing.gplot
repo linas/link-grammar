@@ -1,0 +1,18 @@
+
+set term png
+set out 'packing.png'
+
+set key left
+
+set title "x"
+set xlabel "Time"
+set ylabel "xxxx"
+set logscale x
+set logscale y
+
+plot "packing.dat" using 3:(1000000 * $3/$1) with lines lw 2 title "dj", \
+     "packing.dat" using 3:(1000000 * $3/$2) with lines lw 2 title "con", \
+     "packing.dat" using 3:(1.0e-6 * $1) with lines lw 2 title "1"
+
+#     "packing.dat" using 3:(sqrt($3)) with lines lw 2 title "1"
+# ------------------------
