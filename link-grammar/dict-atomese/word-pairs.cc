@@ -307,11 +307,11 @@ static Exp* get_pair_exprs(Dictionary dict, const Handle& germ)
 	// Sadly, this wraps a big, fat slow Atomese section in the middle,
 	// but I don't see a way out. Over time, lookups should become
 	// increasingly rare, so this shouldn't matter, after a while.
+	const char* wrd = germ->get_name().c_str();
+	Dictionary prdct = local->pair_dict;
 {
 	std::lock_guard<std::mutex> guard(local->dict_mutex);
 
-	const char* wrd = germ->get_name().c_str();
-	Dictionary prdct = local->pair_dict;
 	Dict_node* dn = dict_node_lookup(prdct, wrd);
 
 	if (dn)
@@ -430,13 +430,13 @@ static Exp* get_sent_pair_exprs(Dictionary dict, const Handle& germ,
 static Exp* make_any_conns(Dictionary dict, Pool_desc* pool)
 {
 	// Create a pair of ANY-links that can connect either left or right.
+	Local* local = (Local*) (dict->as_server);
 {
 std::lock_guard<std::mutex> guard(local->dict_mutex);
 	Exp* aneg = make_connector_node(dict, pool, "ANY", '-', false);
 	Exp* apos = make_connector_node(dict, pool, "ANY", '+', false);
 }
 
-	Local* local = (Local*) (dict->as_server);
 	aneg->cost = local->any_default;
 	apos->cost = local->any_default;
 

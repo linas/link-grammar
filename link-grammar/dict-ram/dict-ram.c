@@ -409,10 +409,11 @@ Exp * make_join_node(Pool_desc *mp, Exp* nl, Exp* nr, Exp_type t)
 {
 	Exp* n;
 
-if (mp->lockfree)
-n = malloc(sizeof(Exp));
-else
-	n = Exp_create(mp);
+	if (mp->lockfree)
+		n = malloc(sizeof(Exp));
+	else
+		n = Exp_create(mp);
+
 	n->type = t;
 
 	n->operand_first = nl;
