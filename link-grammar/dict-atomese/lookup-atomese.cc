@@ -529,7 +529,7 @@ void as_end_lookup(Dictionary dict, Sentence sent)
 		sent->orig_sentence);
 
 	// Create connector descriptors for any new connectors.
-	// std::lock_guard<std::mutex> guard(local->dict_mutex);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 	update_condesc(dict);
 }
 
