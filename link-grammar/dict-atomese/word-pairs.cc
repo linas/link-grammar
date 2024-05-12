@@ -307,6 +307,7 @@ static Exp* get_pair_exprs(Dictionary dict, const Handle& germ)
 	// Sadly, this wraps a big, fat slow Atomese section in the middle,
 	// but I don't see a way out. Over time, lookups should become
 	// increasingly rare, so this shouldn't matter, after a while.
+{
 	std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 	const char* wrd = germ->get_name().c_str();
@@ -320,8 +321,12 @@ static Exp* get_pair_exprs(Dictionary dict, const Handle& germ)
 		dict_node_free_lookup(prdct, dn);
 		return exp;
 	}
+// unlock
+}
 
 	Exp* exp = make_pair_exprs(dict, germ);
+
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 	const char* ssc = string_set_add(wrd, dict->string_set);
 	make_dn(prdct, exp, ssc);
 	return exp;
