@@ -203,9 +203,13 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 			/* Assign an upper-case name to the link. */
 			const std::string& slnk = get_linkname(local, germ, ctcr);
 
-			// std::lock_guard<std::mutex> guard(local->dict_mutex);
-			Exp* eee = make_connector_node(dict,
-				dict->Exp_pool, slnk.c_str(), cdir, false);
+			Exp* eee;
+			{
+				// Lock is really needed for condesc_add and string_set_add
+				std::lock_guard<std::mutex> guard(local->dict_mutex);
+				eee = make_connector_node(dict,
+					dict->Exp_pool, slnk.c_str(), cdir, false);
+			}
 
 			if ('+' == cdir)
 				and_enchain_right(dict->Exp_pool, andhead, andtail, eee);
@@ -221,6 +225,7 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 			continue;
 		}
 
+		// Seems to be exp pool only ...
 		// std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 		// Optional: shorten the expression,
