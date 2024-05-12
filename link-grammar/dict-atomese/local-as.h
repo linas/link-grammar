@@ -75,6 +75,7 @@ bool pair_boolean_lookup(Dictionary, const char*);
 
 Dict_node * lookup_section(Dictionary, const Handle& germ);
 
+Exp* locked_make_connector_node(Dictionary, Pool_desc*, const char*, char, bool);
 Exp* make_sect_exprs(Dictionary, const Handle& germ);
 Exp* make_cart_pairs(Dictionary, const Handle& germ, Pool_desc*,
                      const HandleSeq&, int arity, bool any);

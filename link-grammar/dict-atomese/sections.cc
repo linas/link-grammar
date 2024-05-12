@@ -153,6 +153,16 @@ void print_section(Dictionary dict, const Handle& sect)
 
 // ===============================================================
 
+Exp * locke_make_connector_node(Dictionary dict, Pool_desc *mp,
+                          const char* linktype, char dir, bool multi)
+{
+	Local* local = (Local*) (dict->as_server);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	return make_connector_node(dict, mp, linktype, dir, multi);
+}
+
+// ===============================================================
+
 extern thread_local Sentence sentlo;
 extern thread_local HandleSeq sent_words;
 
@@ -203,8 +213,7 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 			/* Assign an upper-case name to the link. */
 			const std::string& slnk = get_linkname(local, germ, ctcr);
 
-			std::lock_guard<std::mutex> guard(local->dict_mutex);
-			Exp* eee = make_connector_node(dict,
+			Exp* eee = locked_make_connector_node(dict,
 				dict->Exp_pool, slnk.c_str(), cdir, false);
 
 			if ('+' == cdir)
@@ -220,8 +229,6 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 				sect->to_short_string().c_str());
 			continue;
 		}
-
-		std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 		// Optional: shorten the expression,
 		// if there's only one connector in it.
@@ -258,7 +265,6 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 	if (nullptr == ORHEAD)   \
 		ORHEAD = (EXP);       \
 	else {                   \
-		std::lock_guard<std::mutex> guard(local->dict_mutex); \
 		ORHEAD = make_or_node(dict->Exp_pool, ORHEAD, (EXP)); \
 	}
 
@@ -285,7 +291,6 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 	// Create disjuncts consisting entirely of "ANY" links.
 	if (local->any_disjuncts)
 	{
-		std::lock_guard<std::mutex> guard(local->dict_mutex);
 		Exp* any = make_any_exprs(dict, dict->Exp_pool);
 		or_enchain(dict->Exp_pool, exp, any);
 	}
