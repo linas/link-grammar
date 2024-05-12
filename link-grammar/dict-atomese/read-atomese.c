@@ -100,6 +100,7 @@ Dictionary dictionary_create_from_atomese(const char *dictdir)
 	dict->Exp_pool = pool_new(__func__, "Exp", /*num_elements*/16380,
 	                          sizeof(Exp), /*zero_out*/false,
 	                          /*align*/false, /*exact*/false);
+	dict->Exp_pool->multithread = true;
 
 	/* Set up the server connection. */
 	if (!as_open(dict)) goto failure;

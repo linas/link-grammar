@@ -10,6 +10,9 @@
 /*************************************************************************/
 
 #include <errno.h>                      // errno
+#if HAVE_THREADS_H
+#include <threads.h> // for mtx_t
+#endif
 
 #include "error.h"
 #include "memory-pool.h"
@@ -72,6 +75,7 @@ Pool_desc *pool_new(const char *func, const char *name,
 	mp->block_size = ALIGN(mp->data_size + FLDSIZE_NEXT, mp->alignment);
 
 	mp->zero_out = zero_out;
+	mp->threadsafe = false;
 #ifdef POOL_EXACT
 	mp->exact = exact;
 #endif /* POOL_EXACT */
@@ -123,6 +127,15 @@ void pool_delete (const char *func, Pool_desc *mp)
 	free(mp);
 }
 
+#if HAVE_THREADS_H
+static mtx_t pool_mutex;
+#define MTX_LOCK if (mp->multithread) mtx_lock(&pool_lock);
+#define MTX_UNLOCK if (mp->multithread) mtx_lock(&pool_unlock);
+#else
+#define MTX_LOCK
+#define MTX_UNLOCK
+#endif
+
 /**
  * Allocate an element from the requested pool.
  * This function uses the feature that pointers to void and char are
@@ -135,6 +148,7 @@ void pool_delete (const char *func, Pool_desc *mp)
  */
 void *pool_alloc_vec(Pool_desc *mp, size_t vecsize)
 {
+	MTX_LOCK
 	dassert(vecsize < mp->num_elements,
 	        "Pool %s: num_elements is too small %zu >= %zu)",
 	        mp->name, vecsize, mp->num_elements);
@@ -142,6 +156,7 @@ void *pool_alloc_vec(Pool_desc *mp, size_t vecsize)
 	{
 		prt_error("Warning: Pool %s: num_elements is too small %zu >= %zu)\n",
 		          mp->name, vecsize, mp->num_elements);
+		MTX_UNLOCK
 		return NULL;
 	}
 
@@ -154,6 +169,7 @@ void *pool_alloc_vec(Pool_desc *mp, size_t vecsize)
 		ASAN_UNPOISON_MEMORY_REGION(alloc_next, mp->element_size);
 		mp->free_list = *(char **)mp->free_list;
 		if (mp->zero_out) memset(alloc_next, 0, mp->element_size);
+		MTX_UNLOCK
 		return alloc_next;
 	}
 #endif // POOL_FREE
@@ -207,6 +223,7 @@ void *pool_alloc_vec(Pool_desc *mp, size_t vecsize)
 	/* Grab a new element. */
 	void *alloc_next = mp->alloc_next;
 	mp->alloc_next +=  alloc_size;
+	MTX_UNLOCK
 	return alloc_next;
 }
 
@@ -218,6 +235,7 @@ void *pool_alloc_vec(Pool_desc *mp, size_t vecsize)
  */
 void pool_reuse(Pool_desc *mp)
 {
+	MTX_LOCK
 	lgdebug(+D_MEMPOOL, "Reuse %zu elements (pool '%s' created in %s())\n",
 	        mp->issued_elements, mp->name, mp->func);
 	mp->ring = mp->chain;
@@ -227,6 +245,7 @@ void pool_reuse(Pool_desc *mp)
 #ifdef POOL_FREE
 	mp->free_list = NULL;
 #endif // POOL_FREE
+	MTX_UNLOCK
 }
 
 #ifdef POOL_FREE

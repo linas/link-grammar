@@ -93,6 +93,7 @@ struct  Pool_desc_s
 
 	/* Flags that are used by pool_alloc(). */
 	bool zero_out;              // Zero out allocated elements.
+	bool multithread;           // Allocations must be thread-safe.
 #ifdef POOL_EXACT
 	bool exact;                 // Abort if more than num_elements are needed.
 #endif /* POOL_EXACT */
