@@ -328,11 +328,20 @@ static Exp* get_pair_exprs(Dictionary dict, const Handle& germ)
 // unlock
 }
 
-	Exp* exp = make_pair_exprs(dict, germ);
+	Exp* newexp = make_pair_exprs(dict, germ);
 
 	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	// Look again
+	Dict_node* dn = dict_node_lookup(prdct, wrd);
+	if (dn)
+	{
+		Exp* exp = dn->exp;
+		dict_node_free_lookup(prdct, dn);
+		return exp;
+	}
+
 	const char* ssc = string_set_add(wrd, dict->string_set);
-	make_dn(prdct, exp, ssc);
+	make_dn(prdct, newexp, ssc);
 	return exp;
 }
 
