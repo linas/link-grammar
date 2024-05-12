@@ -342,7 +342,7 @@ static Exp* get_pair_exprs(Dictionary dict, const Handle& germ)
 
 	const char* ssc = string_set_add(wrd, dict->string_set);
 	make_dn(prdct, newexp, ssc);
-	return exp;
+	return newexp;
 }
 
 /// Return word-pair expressions connecting the `germ` with any word
