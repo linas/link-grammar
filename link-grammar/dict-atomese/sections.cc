@@ -290,6 +290,7 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 	// Create disjuncts consisting entirely of "ANY" links.
 	if (local->any_disjuncts)
 	{
+		// now more granular in make_any_exprs
 		// std::lock_guard<std::mutex> guard(local->dict_mutex);
 		Exp* any = make_any_exprs(dict, dict->Exp_pool);
 		or_enchain(dict->Exp_pool, exp, any);

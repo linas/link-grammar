@@ -425,8 +425,11 @@ static Exp* get_sent_pair_exprs(Dictionary dict, const Handle& germ,
 static Exp* make_any_conns(Dictionary dict, Pool_desc* pool)
 {
 	// Create a pair of ANY-links that can connect either left or right.
+{
+std::lock_guard<std::mutex> guard(local->dict_mutex);
 	Exp* aneg = make_connector_node(dict, pool, "ANY", '-', false);
 	Exp* apos = make_connector_node(dict, pool, "ANY", '+', false);
+}
 
 	Local* local = (Local*) (dict->as_server);
 	aneg->cost = local->any_default;
