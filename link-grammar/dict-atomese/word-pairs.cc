@@ -431,10 +431,11 @@ static Exp* make_any_conns(Dictionary dict, Pool_desc* pool)
 {
 	// Create a pair of ANY-links that can connect either left or right.
 	Local* local = (Local*) (dict->as_server);
+	Exp* aneg,apos;
 {
 std::lock_guard<std::mutex> guard(local->dict_mutex);
-	Exp* aneg = make_connector_node(dict, pool, "ANY", '-', false);
-	Exp* apos = make_connector_node(dict, pool, "ANY", '+', false);
+	aneg = make_connector_node(dict, pool, "ANY", '-', false);
+	apos = make_connector_node(dict, pool, "ANY", '+', false);
 }
 
 	aneg->cost = local->any_default;
