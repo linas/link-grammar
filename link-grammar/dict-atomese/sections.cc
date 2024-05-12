@@ -275,7 +275,7 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 	// Do we already have this word cached? If so, pull from
 	// the cache.
 	{
-		// std::lock_guard<std::mutex> guard(local->dict_mutex);
+		std::lock_guard<std::mutex> guard(local->dict_mutex);
 		Dict_node* dn = dict_node_lookup(dict, ssc);
 		if (dn) return dn;
 	}
