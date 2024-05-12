@@ -265,8 +265,12 @@ static Exp* make_pair_exprs(Dictionary dict, const Handle& germ)
 		if (rawpr->getOutgoingAtom(1) == germ) cdir  = '-';
 
 		// Create the connector
-		Exp* eee = make_connector_node(dict,
+		Exp* eee;
+{
+std::lock_guard<std::mutex> guard(local->dict_mutex);
+		eee = make_connector_node(dict,
 			dict->Exp_pool, slnk.c_str(), cdir, false);
+}
 
 		double cost = (local->pair_scale * mi) + local->pair_offset;
 		eee->cost = cost;
