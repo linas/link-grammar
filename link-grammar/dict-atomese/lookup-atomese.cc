@@ -537,7 +537,7 @@ void as_end_lookup(Dictionary dict, Sentence sent)
 static bool locked_dict_node_exists_lookup(Dictionary dict, const char *s)
 {
 	Local* local = (Local*) (dict->as_server);
-	// std::lock_guard<std::mutex> guard(local->dict_mutex);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 	return dict_node_exists_lookup(dict, s);
 }
 
