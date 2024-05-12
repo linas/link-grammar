@@ -203,7 +203,7 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 			/* Assign an upper-case name to the link. */
 			const std::string& slnk = get_linkname(local, germ, ctcr);
 
-			std::lock_guard<std::mutex> guard(local->dict_mutex);
+			// std::lock_guard<std::mutex> guard(local->dict_mutex);
 			Exp* eee = make_connector_node(dict,
 				dict->Exp_pool, slnk.c_str(), cdir, false);
 
@@ -221,7 +221,7 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 			continue;
 		}
 
-		std::lock_guard<std::mutex> guard(local->dict_mutex);
+		// std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 		// Optional: shorten the expression,
 		// if there's only one connector in it.
@@ -258,7 +258,7 @@ Exp* make_sect_exprs(Dictionary dict, const Handle& germ)
 	if (nullptr == ORHEAD)   \
 		ORHEAD = (EXP);       \
 	else {                   \
-		std::lock_guard<std::mutex> guard(local->dict_mutex); \
+		/* std::lock_guard<std::mutex> guard(local->dict_mutex); */ \
 		ORHEAD = make_or_node(dict->Exp_pool, ORHEAD, (EXP)); \
 	}
 
@@ -275,7 +275,7 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 	// Do we already have this word cached? If so, pull from
 	// the cache.
 	{
-		std::lock_guard<std::mutex> guard(local->dict_mutex);
+		// std::lock_guard<std::mutex> guard(local->dict_mutex);
 		Dict_node* dn = dict_node_lookup(dict, ssc);
 		if (dn) return dn;
 	}
@@ -285,7 +285,7 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 	// Create disjuncts consisting entirely of "ANY" links.
 	if (local->any_disjuncts)
 	{
-		std::lock_guard<std::mutex> guard(local->dict_mutex);
+		// std::lock_guard<std::mutex> guard(local->dict_mutex);
 		Exp* any = make_any_exprs(dict, dict->Exp_pool);
 		or_enchain(dict->Exp_pool, exp, any);
 	}
@@ -314,7 +314,7 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 
 	lgdebug(D_USER_INFO, "Atomese: Created %d plain exprs for >>%s<<\n",
 		size_of_expression(exp), ssc);
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	// std::lock_guard<std::mutex> guard(local->dict_mutex);
 	make_dn(dict, exp, ssc);
 	return dict_node_lookup(dict, ssc);
 }

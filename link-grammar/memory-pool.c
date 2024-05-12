@@ -71,6 +71,7 @@ Pool_desc *pool_new(const char *func, const char *name,
 	mp->data_size = ALIGN(num_elements * mp->element_size, FLDSIZE_NEXT);
 	mp->block_size = ALIGN(mp->data_size + FLDSIZE_NEXT, mp->alignment);
 
+	mp->lockfree = false;
 	mp->zero_out = zero_out;
 #ifdef POOL_EXACT
 	mp->exact = exact;

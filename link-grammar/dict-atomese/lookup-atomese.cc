@@ -529,7 +529,7 @@ void as_end_lookup(Dictionary dict, Sentence sent)
 		sent->orig_sentence);
 
 	// Create connector descriptors for any new connectors.
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	// std::lock_guard<std::mutex> guard(local->dict_mutex);
 	update_condesc(dict);
 }
 
@@ -537,7 +537,7 @@ void as_end_lookup(Dictionary dict, Sentence sent)
 static bool locked_dict_node_exists_lookup(Dictionary dict, const char *s)
 {
 	Local* local = (Local*) (dict->as_server);
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	// std::lock_guard<std::mutex> guard(local->dict_mutex);
 	return dict_node_exists_lookup(dict, s);
 }
 
@@ -737,7 +737,7 @@ Dict_node * as_lookup_list(Dictionary dict, const char *s)
 	// Create disjuncts consisting entirely of "ANY" links.
 	if (local->any_disjuncts)
 	{
-		std::lock_guard<std::mutex> guard(local->dict_mutex);
+		// std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 		// If it's cached, just return that.
 		Dict_node* dn = dict_node_lookup(dict, ssc);

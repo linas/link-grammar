@@ -101,6 +101,8 @@ Dictionary dictionary_create_from_atomese(const char *dictdir)
 	                          sizeof(Exp), /*zero_out*/false,
 	                          /*align*/false, /*exact*/false);
 
+	dict->Exp_pool->lockfree = true;
+
 	/* Set up the server connection. */
 	if (!as_open(dict)) goto failure;
 

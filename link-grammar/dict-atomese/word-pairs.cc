@@ -376,7 +376,7 @@ static Exp* get_sent_pair_exprs(Dictionary dict, const Handle& germ,
 	Exp* sentex = nullptr;
 	int nfound = 0;
 
-	std::lock_guard<std::mutex> guard(local->dict_mutex);
+	// std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 	// The allexp is an OR_type expression. A linked list of connectors
 	// follow, chained along `operand_next`.
