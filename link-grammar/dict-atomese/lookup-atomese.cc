@@ -737,7 +737,7 @@ Dict_node * as_lookup_list(Dictionary dict, const char *s)
 	// Create disjuncts consisting entirely of "ANY" links.
 	if (local->any_disjuncts)
 	{
-		// std::lock_guard<std::mutex> guard(local->dict_mutex);
+		std::lock_guard<std::mutex> guard(local->dict_mutex);
 
 		// If it's cached, just return that.
 		Dict_node* dn = dict_node_lookup(dict, ssc);

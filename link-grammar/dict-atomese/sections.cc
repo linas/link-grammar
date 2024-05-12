@@ -314,7 +314,7 @@ static Dict_node * lookup_plain_section(Dictionary dict, const Handle& germ)
 
 	lgdebug(D_USER_INFO, "Atomese: Created %d plain exprs for >>%s<<\n",
 		size_of_expression(exp), ssc);
-	// std::lock_guard<std::mutex> guard(local->dict_mutex);
+	std::lock_guard<std::mutex> guard(local->dict_mutex);
 	make_dn(dict, exp, ssc);
 	return dict_node_lookup(dict, ssc);
 }
